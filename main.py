@@ -1,6 +1,8 @@
 #!/bin/bash
 import sys
 import time
+from navigate import move_to_xy
+from avoidCrash import avoid_crash
 
 
 def read_util_ok():
@@ -14,7 +16,7 @@ def finish():
 
 
 if __name__ == '__main__':
-    time.sleep(10)
+    # time.sleep(10)
     read_util_ok()#初始化完成
     finish()#初始化完成输出一个OK
     
@@ -48,17 +50,20 @@ if __name__ == '__main__':
 
         read_util_ok()#数据读入完成
 
-        
 
-        
-        
-        
         
         sys.stdout.write('%d\n' % frame_id)
 
-
-        line_speed, angle_speed = 3, 1.5
         for robot_id in range(4):
+            line_speed, angle_speed = move_to_xy(robot_list[robot_id], work_bench[robot_id]['x'], work_bench[robot_id]['y'])
+            line_speed, angle_speed = avoid_crash(robot_list[robot_id], i, line_speed, angle_speed, robot_list)
             sys.stdout.write('forward %d %d\n' % (robot_id, line_speed))
             sys.stdout.write('rotate %d %f\n' % (robot_id, angle_speed))
+
+        # sys.stdout.write('%d\n' % frame_id)
+
+        # line_speed, angle_speed = 3, 1.5
+        # for robot_id in range(4):
+        #     sys.stdout.write('forward %d %d\n' % (robot_id, line_speed))
+        #     sys.stdout.write('rotate %d %f\n' % (robot_id, angle_speed))
         finish()
