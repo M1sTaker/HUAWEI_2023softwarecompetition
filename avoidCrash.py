@@ -1,11 +1,11 @@
 import numpy as np
 import math
-def avoid_crash(robot, line_speed, angle_speed,all_robot):
+def avoid_crash(robot, robot_id, line_speed, angle_speed,all_robot):
     line_speed_new = line_speed
     angle_speed_new = angle_speed
     d_min = 0.45
     for i in range(4):
-        if i == robot['id']:
+        if i == robot_id:
             continue
         if (float(all_robot[i]['x'])-float(robot['x']))**2+(float(all_robot[i]['y'])-float(robot['y']))**2 <= d_min**2:
             AB = np.array([float(all_robot[i]['x'])-float(robot['x']), float(all_robot[i]['y'])-float(robot['y'])]) #本机器人指向碰撞机器人的向量，简称L1
@@ -18,7 +18,7 @@ def avoid_crash(robot, line_speed, angle_speed,all_robot):
             cos_A1 = np.dot(AB, D1)/(np.linalg.norm(AB)*np.linalg.norm(D1))
             cos_B2 = np.dot(BA, D2)/(np.linalg.norm(BA)*np.linalg.norm(D2))
             cos_theta = math.cos(theta)
-            if cos_A1==1 & cos_B2==1:
+            if cos_A1==1 and cos_B2==1:
                 line_speed_new = 0.5
                 angle_speed_new = 1
                 return line_speed_new, angle_speed_new
