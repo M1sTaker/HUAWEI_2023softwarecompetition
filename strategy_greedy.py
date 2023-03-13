@@ -18,12 +18,13 @@ production_cycle = [50, 50, 50, 500, 500, 500, 1000, 1, 1]
 
 
 # work_bench和robot_list是主函数中获取的工作台和机器人的信息
-# targets_of_robots为4个机器人的配送路径，形式为[取货工作台序号，购买后运送货物的目的工作台序号,要购买的货物编号]
-# 初始化targets_of_robots = [[], [], [], []]
-# 每一帧决策前调用此函数，若机器人根据策略完成了取货和送货的任务，须将targets_of_robots对应位置置为[]
+# targets_of_robots为4个机器人的配送策略，形式为[目标取货工作台序号，购买后目标运送货物工作台号,要购买和运送的货物类型编号]
+# 初始化时targets_of_robots = [[], [], [], []]
+# 每一帧决策前调用此函数，若机器人完成了取货和送货的任务，须将targets_of_robots对应位置置为[]再调用
+# 返回函数为更新后的targets_of_robots
 def strategy_greedy(work_bench, robot_list, targets_of_robots):
     # 还没有分配目标的机器人编号
-    robots_without_target = [i for i in range(4) if targets_of_robots[i] != []]
+    robots_without_target = [i for i in range(4) if targets_of_robots[i] == []]
     if not robots_without_target:
         return targets_of_robots
 
@@ -102,8 +103,8 @@ def strategy_greedy(work_bench, robot_list, targets_of_robots):
         for destination in candidate_sell_destinations:
             if departure[1] == destination[1]:
                 # 起点坐标
-                departure_xy = np.array(work_bench[departure[0]]['x'], work_bench[departure[0]]['y'])
-                destination_xy = np.array(work_bench[destination[0]['x']], work_bench[destination[0]]['y'])
+                departure_xy = np.array([work_bench[departure[0]]['x'], work_bench[departure[0]]['y']])
+                destination_xy = np.array([work_bench[destination[0]]['x'], work_bench[destination[0]]['y']])
                 distance = np.linalg.norm(departure_xy - destination_xy)
                 time = math.ceil(distance / 6 * 1000 / 20)
                 distribution_strategies.append(
@@ -114,7 +115,7 @@ def strategy_greedy(work_bench, robot_list, targets_of_robots):
     top_50_targets_for_robots = []
     for robot_id in robots_without_target:
         robot = robot_list[robot_id]
-        robot_xy = np.array(robot['x'], robot['y'])
+        robot_xy = np.array([robot['x'], robot['y']])
         # top_50_targets_for_this_robot内容格式为[取货点工作台序号，送货点工作台序号，配送货物类型编号，平均每帧收益]
         top_50_targets_for_this_robot = []
         for strategy in distribution_strategies:
@@ -123,7 +124,7 @@ def strategy_greedy(work_bench, robot_list, targets_of_robots):
             product_type = strategy[2]
             profit = strategy[3]
             time_from_departure_to_destination = strategy[4]
-            departure_xy = np.array(work_bench[departure]['x'], work_bench[departure]['y'])
+            departure_xy = np.array([work_bench[departure]['x'], work_bench[departure]['y']])
             distance_from_robot_to_departure = np.linalg.norm(robot_xy - departure_xy)
             time_from_robot_to_departure = math.ceil(distance_from_robot_to_departure / 6 * 1000 / 20)
             profit_per_frame = profit / (time_from_departure_to_destination + time_from_robot_to_departure)
