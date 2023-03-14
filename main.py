@@ -17,6 +17,7 @@ def finish():
 
 
 if __name__ == '__main__':
+
     read_util_ok()  # 初始化完成
     finish()  # 初始化完成输出一个OK
 
@@ -27,12 +28,12 @@ if __name__ == '__main__':
             break
         parts = line.split(' ')
         frame_id = int(parts[0])  # 第一行：帧数 得分
-        print("得分:" + str(parts[1]), file=sys.stderr)
 
         line = sys.stdin.readline().strip().split(' ')
         # 工作台数量
         K = int(line[0])
 
+        print("帧数:" + str(frame_id) + "; 得分:" + str(parts[1]) + "工作台数量：" + str(K), file=sys.stderr)
         # 下面K行为工作站信息
         work_bench = []
         for i in range(K):
@@ -76,20 +77,25 @@ if __name__ == '__main__':
             target = targets_of_robots[robot_id]
             robot = robot_list[robot_id]
             if not target:
-
                 continue
 
             # 如果机器人手中无货，则前往目标取货台
             if robot['item_type'] == 0:
+                print("目标坐标(" + str(work_bench[target[0]]['x']) + "," + str(work_bench[target[0]]['y'])+")",
+                      file=sys.stderr)
+                print(work_bench[target[0]],file=sys.stderr)
                 line_speed, angle_speed = move_to_xy(robot, work_bench[target[0]]['x'],
                                                      work_bench[target[0]]['y'])
-                line_speed, angle_speed = avoid_crash(robot_list[robot_id], robot_id, line_speed, angle_speed, robot_list)
+                # line_speed, angle_speed = avoid_crash(robot_list[robot_id], robot_id, line_speed, angle_speed, robot_list)
                 sys.stdout.write('forward %d %d\n' % (robot_id, line_speed))
                 sys.stdout.write('rotate %d %f\n' % (robot_id, angle_speed))
             if robot['item_type'] != 0:
+                print("目标坐标(" + str(work_bench[target[0]]['x']) + "," + str(work_bench[target[0]]['y']) + ")",
+                      file=sys.stderr)
+                print(work_bench[target[0]],file=sys.stderr)
                 line_speed, angle_speed = move_to_xy(robot, work_bench[target[1]]['x'],
                                                      work_bench[target[1]]['y'])
-                line_speed, angle_speed = avoid_crash(robot_list[robot_id], robot_id, line_speed, angle_speed, robot_list)
+                # line_speed, angle_speed = avoid_crash(robot_list[robot_id], robot_id, line_speed, angle_speed, robot_list)
                 sys.stdout.write('forward %d %d\n' % (robot_id, line_speed))
                 sys.stdout.write('rotate %d %f\n' % (robot_id, angle_speed))
 
@@ -100,6 +106,5 @@ if __name__ == '__main__':
         #     sys.stdout.write('forward %d %d\n' % (robot_id, line_speed))
         #     sys.stdout.write('rotate %d %f\n' % (robot_id, angle_speed))
         finish()
-
 
         read_util_ok()  # 数据读入完成
