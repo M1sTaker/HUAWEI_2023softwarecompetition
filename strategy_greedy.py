@@ -140,21 +140,18 @@ def strategy_greedy(work_bench, robot_list, targets_of_robots):
 
         top_50_targets_for_robots.append(top_50_targets_for_this_robot)
 
-    final_targets = []
     for i in range(num_of_robots_without_targets):  # 为每一个机器人寻找方案
         for target in top_50_targets_for_robots[i]:  # 遍历该机器人的待选方案
             flag = False  # 该方案与其他机器人已选方案是否冲突
-            for selected_target in final_targets:  # 判断该待选方案是否和其他机器人已选择方案有冲突
+            for selected_target in targets_of_robots:  # 判断该待选方案是否和其他机器人已选择方案有冲突
+                if not selected_target:
+                    continue
                 if selected_target[0] == target[0] and selected_target[2] == target[2] or selected_target[1] == target[
                     1] and selected_target[2] == target[2]:
                     flag = True
                     break
             if not flag:
-                final_targets.append(target)
+                targets_of_robots[robots_without_target[i]] = target[0:3]
                 break
-
-    # 更新机器人的配送目标
-    for i in range(num_of_robots_without_targets):
-        targets_of_robots[robots_without_target[i]] = final_targets[i][0:3]
 
     return targets_of_robots
