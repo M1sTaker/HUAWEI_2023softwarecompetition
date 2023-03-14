@@ -30,6 +30,6 @@ def move_to_xy(robot, des_x, des_y):
             angle_speed = 3.0
 
     if(distance < 0.8): #快到终点时减速
-        line_speed = 0.1
+        line_speed = 1
 
     return line_speed, angle_speed
