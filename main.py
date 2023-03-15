@@ -67,10 +67,12 @@ if __name__ == '__main__':
         strategies_of_robots = strategy_greedy(work_bench_list, robot_list, strategies_of_robots)
 
         # 看看每个机器人能不能购买或售出物品
+        print("此处为调试购买或售出物品判断：", file=sys.stderr)
         for robot in robot_list:
             strategy = strategies_of_robots[robot['id']]
             print("机器人" + str(robot['id']) + ":" + str(robot), file=sys.stderr)
             print("策略：" + str(strategy), file=sys.stderr)
+            print("\n", file=sys.stderr)
             # 如果该机器人没有被分配任务或者该机器人没有在任何工作台附近
             if not strategy or robot['near_work_bench_id'] == -1:
                 continue
@@ -86,9 +88,8 @@ if __name__ == '__main__':
                     sys.stdout.write('sell %d \n' % robot['id'])
                     strategies_of_robots[robot['id']] = []
 
-        print("\n", file=sys.stderr)
-
         # 为每个机器人输出操作
+        print("此处为机器人决策信息：", file=sys.stderr)
         for robot in robot_list:
             strategy = strategies_of_robots[robot['id']]
             if not strategy:
@@ -103,22 +104,17 @@ if __name__ == '__main__':
                                                      work_bench_list[strategy[0]]['y'])
                 sys.stdout.write('forward %d %d\n' % (robot['id'], line_speed))
                 sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
-                print("line_speed:" + str(line_speed), file=sys.stderr)
-                print("angle_speed:" + str(angle_speed), file=sys.stderr)
                 print("\n", file=sys.stderr)
 
+            # 如果机器人手中有，则前往目标送货台
             if robot['carried_product_type'] != 0:
                 print("机器人" + str(robot['id']) + ":" + str(robot), file=sys.stderr)
                 print("策略：" + str(strategy), file=sys.stderr)
-                print("目标坐标(" + str(work_bench_list[strategy[0]]['x']) + "," + str(
-                    work_bench_list[strategy[0]]['y']) + ")",
-                      file=sys.stderr)
+                print("目标工作台:" + str(work_bench_list[strategy[1]]), file=sys.stderr)
                 line_speed, angle_speed = move_to_xy(robot, work_bench_list[strategy[1]]['x'],
                                                      work_bench_list[strategy[1]]['y'])
                 sys.stdout.write('forward %d %d\n' % (robot['id'], line_speed))
                 sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
-                print("line_speed:" + str(line_speed), file=sys.stderr)
-                print("angle_speed:" + str(angle_speed), file=sys.stderr)
                 print("\n", file=sys.stderr)
 
             # line_speed, angle_speed = 3, 1.5

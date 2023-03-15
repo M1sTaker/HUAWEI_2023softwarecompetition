@@ -106,7 +106,7 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots):
                 distance = np.linalg.norm(departure_xy - destination_xy)
                 time = math.ceil(distance / 6 * 1000 / 20)  # 单位为帧
                 distribution_strategies.append(
-                    [departure[0], destination[0], departure[1], product_profits[departure[1]], time])
+                    [departure[0], destination[0], departure[1], product_profits[work_bench_list[departure[1]]['type']], time])
 
     # 为每个机器人找出前50个平均收益最大的方案
     top_50_strategies_for_robots = []
@@ -143,7 +143,8 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots):
             for selected_strategy in strategies_of_robots:  # 判断该待选方案是否和其他机器人已选择方案有冲突
                 if not selected_strategy:
                     continue
-                if selected_strategy[0] == strategy[0] and selected_strategy[2] == strategy[2] or selected_strategy[1] == strategy[1] and selected_strategy[2] == strategy[2]:
+                if selected_strategy[0] == strategy[0] and selected_strategy[2] == strategy[2] or selected_strategy[
+                    1] == strategy[1] and selected_strategy[2] == strategy[2]:
                     flag = True
                     break
             if not flag:
