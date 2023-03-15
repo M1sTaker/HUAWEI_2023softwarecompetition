@@ -12,19 +12,19 @@ def move_to_xy(robot, des_x, des_y):
 
     distance = np.linalg.norm(robot_xy - des_xy)#计算距离
 
-
+    #朝向：弧度[-pi，pi]  速度：m/s [-2,6]  旋转速度：弧度/s [-pi,pi]
     # 机器人面向向量与(工作台-机器人)向量小于90°
     if (np.abs(robot_face_angle - xy_robot_vec_angle) <= np.pi/2):
         if(robot_face_angle == xy_robot_vec_angle):# 夹角为0不改变方向
-            return 3.0, 0
-        line_speed = 3.0
+            return 6.0, 0
+        line_speed = 5.0
         if(robot_face_angle > xy_robot_vec_angle):# 机器人向右转(顺时针)
             angle_speed = -2.0
-        else:
-            angle_speed = 3.0
+        else:# 机器人向左转(逆时针)
+            angle_speed = 2.0
     else:# 机器人面向向量与(工作台-机器人)向量大于90°
         line_speed = 3.0
-        if (robot_face_angle > xy_robot_vec_angle):  # 机器人向右转(顺时针)
+        if (abs(robot_face_angle) + abs(xy_robot_vec_angle) < np.pi):  # 机器人向右转(顺时针)
             angle_speed = -2.0
         else:
             angle_speed = 2.0
