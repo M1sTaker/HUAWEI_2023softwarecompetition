@@ -4,6 +4,10 @@ def avoid_crash(robot, robot_id, line_speed, angle_speed,all_robot):
     line_speed_new = line_speed
     angle_speed_new = angle_speed
     d_min = 0.45
+    if robot['x']<=0.5 or robot['x'] >=49.5 or robot['y']<=0.5 or robot['y'] >= 49.5:
+        line_speed_new = 0
+        angle_speed_new = 3
+        return line_speed_new, angle_speed_new
     for i in range(4):
         if i == robot_id:
             continue
