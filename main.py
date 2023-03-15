@@ -79,12 +79,15 @@ if __name__ == '__main__':
                 continue
             # 否则，判断是否可以进行购买或出售动作
             else:
+                # print(robot['carried_product_type'], file=sys.stderr)
+                # print(work_bench_list[strategy[1]]['material_state'], file=sys.stderr)
+                # print(robot['carried_product_type'] & work_bench_list[strategy[1]]['material_state'], file=sys.stderr)
                 # 如果机器人靠近目标取货工作台且手中没有东西且取货工作台有产品可取，则可以进行购买操作
                 if robot['near_work_bench_id'] == strategy[0] and robot['carried_product_type'] == 0 and \
                         work_bench_list[strategy[0]]['product_state'] == 1:
                     sys.stdout.write('buy %d \n' % robot['id'])
                 # 如果机器人手中有货且靠近目标销售工作台且目标工作台原料格空着
-                elif robot['carried_product_type'] != 0 and robot['near_work_bench_id'] == strategy[1] and robot[
+                elif robot['carried_product_type'] != 0 and robot['near_work_bench_id'] == strategy[1] and 1 << robot[
                     'carried_product_type'] & work_bench_list[strategy[1]]['material_state'] == 0:
                     sys.stdout.write('sell %d \n' % robot['id'])
                     strategies_of_robots[robot['id']] = []

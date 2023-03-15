@@ -16,6 +16,8 @@ product_work_bench_produce = [1, 2, 3, 4, 5, 6, 7]
 # 各种工作台的工作周期
 production_cycle = [50, 50, 50, 500, 500, 500, 1000, 1, 1]
 
+top_N = 50  # 取前top_N个最好的策略
+
 
 # work_bench_list和robot_list是主函数中获取的工作台和机器人的信息
 # strategies_of_robots为4个机器人的配送策略，形式为[目标取货工作台序号，购买后目标运送货物工作台号,要购买和运送的货物类型编号]
@@ -106,14 +108,15 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots):
                 distance = np.linalg.norm(departure_xy - destination_xy)
                 time = math.ceil(distance / 6 * 1000 / 20)  # 单位为帧
                 distribution_strategies.append(
-                    [departure[0], destination[0], departure[1], product_profits[work_bench_list[departure[1]]['type']], time])
+                    [departure[0], destination[0], departure[1], product_profits[work_bench_list[departure[1]]['type']],
+                     time])
 
-    # 为每个机器人找出前50个平均收益最大的方案
-    top_50_strategies_for_robots = []
+    # 为每个机器人找出前N个平均收益最大的方案
+    top_n_strategies_for_robots = []
     for robot in robots_without_strategy:
         robot_xy = np.array([robot['x'], robot['y']])
-        # top_50_strategies_for_this_robot内容格式为[取货点工作台序号，送货点工作台序号，配送货物类型编号，平均每帧收益]
-        top_50_strategies_for_this_robot = []
+        # top_n_strategies_for_this_robot内容格式为[取货点工作台序号，送货点工作台序号，配送货物类型编号，平均每帧收益]
+        top_n_strategies_for_this_robot = []
         for strategy in distribution_strategies:
             departure = strategy[0]  # 取货点工作台序号
             destination = strategy[1]  # 送货点工作台序号
@@ -123,22 +126,25 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots):
             departure_xy = np.array([work_bench_list[departure]['x'], work_bench_list[departure]['y']])
             distance_from_robot_to_departure = np.linalg.norm(robot_xy - departure_xy)
             time_from_robot_to_departure = math.ceil(distance_from_robot_to_departure / 6 * 1000 / 20)
+            time_from_robot_to_departure = time_from_robot_to_departure if work_bench_list[departure][
+                                                                               'produce_remain_time'] < time_from_robot_to_departure else \
+            work_bench_list[departure]['produce_remain_time']
             profit_per_frame = profit / (time_from_departure_to_destination + time_from_robot_to_departure)
 
             # 插入排序，寻找插入点
-            insert_index = len(top_50_strategies_for_this_robot)
-            for top_50_strategy in top_50_strategies_for_this_robot:
+            insert_index = len(top_n_strategies_for_this_robot)
+            for top_50_strategy in top_n_strategies_for_this_robot:
                 if top_50_strategy[3] <= profit_per_frame:
-                    insert_index = top_50_strategies_for_this_robot.index(top_50_strategy)
+                    insert_index = top_n_strategies_for_this_robot.index(top_50_strategy)
                     break
-            if insert_index <= 49:
-                top_50_strategies_for_this_robot.insert(insert_index,
-                                                        [departure, destination, product_type, profit_per_frame])
+            if insert_index <= top_N - 1:
+                top_n_strategies_for_this_robot.insert(insert_index,
+                                                       [departure, destination, product_type, profit_per_frame])
 
-        top_50_strategies_for_robots.append(top_50_strategies_for_this_robot)
+        top_n_strategies_for_robots.append(top_n_strategies_for_this_robot)
 
     for i in range(len(robots_without_strategy)):  # 为每一个机器人寻找方案
-        for strategy in top_50_strategies_for_robots[i]:  # 遍历该机器人的待选方案
+        for strategy in top_n_strategies_for_robots[i]:  # 遍历该机器人的待选方案
             flag = False  # 该方案与其他机器人已选方案是否冲突
             for selected_strategy in strategies_of_robots:  # 判断该待选方案是否和其他机器人已选择方案有冲突
                 if not selected_strategy:
