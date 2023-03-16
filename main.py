@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
         sys.stdout.write('%d\n' % frame_id)
 
-        strategies_of_robots = strategy_greedy(work_bench_list, robot_list, strategies_of_robots)
+        strategies_of_robots = strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id)
 
         # 看看每个机器人能不能购买或售出物品
         # print("此处为调试购买或售出物品判断：", file=sys.stderr)

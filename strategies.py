@@ -24,7 +24,7 @@ top_N = 50  # 取前top_N个最好的策略
 # 初始化时strategies_of_robots = [[], [], [], []]
 # 每一帧决策前调用此函数，若机器人完成了取货和送货的任务，须将strategies_of_robots对应位置置为[]再调用
 # 返回函数为更新后的strategies_of_robots
-def strategy_greedy(work_bench_list, robot_list, strategies_of_robots):
+def strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id):
     # 还没有分配任务的机器人编号
     robots_without_strategy = [robot for robot in robot_list if strategies_of_robots[robot['id']] == []]
 
@@ -126,9 +126,12 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots):
             departure_xy = np.array([work_bench_list[departure]['x'], work_bench_list[departure]['y']])
             distance_from_robot_to_departure = np.linalg.norm(robot_xy - departure_xy)
             time_from_robot_to_departure = math.ceil(distance_from_robot_to_departure / 6 * 1000 / 20)
+            # 如果当前任务在游戏结束前无法完成，则直接pass
+            if time_from_robot_to_departure + time_from_departure_to_destination > (9000 - frame_id - 20):
+                continue
             time_from_robot_to_departure = time_from_robot_to_departure if work_bench_list[departure][
                                                                                'produce_remain_time'] < time_from_robot_to_departure else \
-            work_bench_list[departure]['produce_remain_time']
+                work_bench_list[departure]['produce_remain_time']
             profit_per_frame = profit / (time_from_departure_to_destination + time_from_robot_to_departure)
 
             # 插入排序，寻找插入点
