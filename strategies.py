@@ -150,7 +150,7 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id)
 
     for i in range(len(robots_without_strategy)):  # 为每一个机器人寻找方案
         for strategy in top_n_strategies_for_robots[i]:  # 遍历该机器人的待选方案
-            if work_bench_list[strategy[0]]['produce_remain_time'] > 300:
+            if work_bench_list[strategy[0]]['produce_remain_time'] > 400:
                 continue
             flag = False  # 该方案与其他机器人已选方案是否冲突
             for selected_strategy in strategies_of_robots:  # 判断该待选方案是否和其他机器人已选择方案有冲突
