@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import math
 
@@ -20,7 +22,7 @@ top_N = 50  # 取前top_N个最好的策略
 
 
 # work_bench_list和robot_list是主函数中获取的工作台和机器人的信息
-# strategies_of_robots为4个机器人的配送策略，形式为[目标取货工作台序号，购买后目标运送货物工作台号,要购买和运送的货物类型编号]
+# strategies_of_robots为4个机器人的配送策略，形式为[目标取货工作台序号，购买后目标运送货物工作台号,要购买和运送的货物类型编号，机器人是否已经完成取货，0表示未完成取货，1表示已完成取货]
 # 初始化时strategies_of_robots = [[], [], [], []]
 # 每一帧决策前调用此函数，若机器人完成了取货和送货的任务，须将strategies_of_robots对应位置置为[]再调用
 # 返回函数为更新后的strategies_of_robots
@@ -148,24 +150,30 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id)
 
     for i in range(len(robots_without_strategy)):  # 为每一个机器人寻找方案
         for strategy in top_n_strategies_for_robots[i]:  # 遍历该机器人的待选方案
+            if work_bench_list[strategy[0]]['produce_remain_time'] > 300:
+                continue
             flag = False  # 该方案与其他机器人已选方案是否冲突
             for selected_strategy in strategies_of_robots:  # 判断该待选方案是否和其他机器人已选择方案有冲突
                 if not selected_strategy:
                     continue
-                if selected_strategy[0] == strategy[0] and selected_strategy[2] == strategy[2] or selected_strategy[
+                if selected_strategy[0] == strategy[0] and selected_strategy[2] == strategy[2] and selected_strategy[
+                    3] == 0 or selected_strategy[
                     1] == strategy[1] and selected_strategy[2] == strategy[2]:
                     flag = True
                     break
             if not flag:
                 strategies_of_robots[robots_without_strategy[i]['id']] = strategy[0:3]
+                strategies_of_robots[robots_without_strategy[i]['id']].append(0)
+                # print(str(strategies_of_robots) + "--------------------------------", file=sys.stderr)
                 break
 
     return strategies_of_robots
 
+
 def strategy_greedy_2(work_bench_list, robot_list):
-    work_bench_state_list = [] #wbsl[i][j], 第i行表示类型i+1的工作台的集合
+    work_bench_state_list = []  # wbsl[i][j], 第i行表示类型i+1的工作台的集合
     temp_list = []
     for i in range(9):
-        
+        pass
 
     return 0

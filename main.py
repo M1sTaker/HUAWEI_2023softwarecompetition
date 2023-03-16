@@ -86,6 +86,7 @@ if __name__ == '__main__':
                 if robot['near_work_bench_id'] == strategy[0] and robot['carried_product_type'] == 0 and \
                         work_bench_list[strategy[0]]['product_state'] == 1:
                     sys.stdout.write('buy %d \n' % robot['id'])
+                    strategies_of_robots[robot['id']][3] = 1
                 # 如果机器人手中有货且靠近目标销售工作台且目标工作台原料格空着
                 elif robot['carried_product_type'] != 0 and robot['near_work_bench_id'] == strategy[1] and 1 << robot[
                     'carried_product_type'] & work_bench_list[strategy[1]]['material_state'] == 0:
@@ -105,7 +106,7 @@ if __name__ == '__main__':
                 # print("策略：" + str(strategy), file=sys.stderr)
                 # print("目标工作台:" + str(work_bench_list[strategy[0]]), file=sys.stderr)
                 line_speed, angle_speed = move_to_xy(robot, work_bench_list[strategy[0]]['x'],
-                                                     work_bench_list[strategy[0]]['y'])
+                                                     work_bench_list[strategy[0]]['y'], robot_list)
                 # line_speed, angle_speed = avoid_crash(robot, robot['id'], line_speed, angle_speed, robot_list)
                 sys.stdout.write('forward %d %d\n' % (robot['id'], line_speed))
                 sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
@@ -117,7 +118,7 @@ if __name__ == '__main__':
                 # print("策略：" + str(strategy), file=sys.stderr)
                 # print("目标工作台:" + str(work_bench_list[strategy[1]]), file=sys.stderr)
                 line_speed, angle_speed = move_to_xy(robot, work_bench_list[strategy[1]]['x'],
-                                                     work_bench_list[strategy[1]]['y'])
+                                                     work_bench_list[strategy[1]]['y'], robot_list)
                 # line_speed, angle_speed = avoid_crash(robot, robot['id'], line_speed, angle_speed, robot_list)
                 sys.stdout.write('forward %d %d\n' % (robot['id'], line_speed))
                 sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
