@@ -2,8 +2,13 @@
 import sys
 import time
 from navigate import move_to_xy
+
 from avoidCrash import avoid_crash
+from avoidCrash import crash_detect
+from avoidCrash import avoid_crash_v2
+
 from strategies import strategy_greedy
+
 
 
 def read_util_ok():
@@ -129,10 +134,13 @@ if __name__ == '__main__':
                 sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
                 # print("\n", file=sys.stderr)
 
-            # line_speed, angle_speed = 3, 1.5
-            # for robot_id in range(4):
-            #     sys.stdout.write('forward %d %d\n' % (robot_id, line_speed))
-            #     sys.stdout.write('rotate %d %f\n' % (robot_id, angle_speed))
+        crash_list = crash_detect(robot_list, crash_detect_distance=2)
+        if crash_list:avoid_crash_v2(crash_list)
+
+        # line_speed, angle_speed = 3, 1.5
+        # for robot_id in range(4):
+        #     sys.stdout.write('forward %d %d\n' % (robot_id, line_speed))
+        #     sys.stdout.write('rotate %d %f\n' % (robot_id, angle_speed))
         finish()
 
         read_util_ok()

@@ -1,6 +1,7 @@
 import math
 import numpy as np
 
-a = np.array([3,4])
-b = np.array([1,5])
-print(np.outer(a,b))
+a = [1, 2,3,4]
+for i in range(len(a)):
+    for j in range(i+1, len(a)):
+        print(i, j)
