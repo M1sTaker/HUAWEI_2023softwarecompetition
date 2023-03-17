@@ -106,7 +106,7 @@ if __name__ == '__main__':
                 # print("目标工作台:" + str(work_bench_list[strategy[0]]), file=sys.stderr)
                 line_speed, angle_speed = move_to_xy(robot, work_bench_list[strategy[0]]['x'],
                                                      work_bench_list[strategy[0]]['y'])
-                # line_speed, angle_speed = avoid_crash(robot, robot['id'], line_speed, angle_speed, robot_list)
+                line_speed, angle_speed = avoid_crash(robot, robot['id'], line_speed, angle_speed, robot_list)
                 sys.stdout.write('forward %d %d\n' % (robot['id'], line_speed))
                 sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
                 # print("\n", file=sys.stderr)
@@ -118,7 +118,7 @@ if __name__ == '__main__':
                 # print("目标工作台:" + str(work_bench_list[strategy[1]]), file=sys.stderr)
                 line_speed, angle_speed = move_to_xy(robot, work_bench_list[strategy[1]]['x'],
                                                      work_bench_list[strategy[1]]['y'])
-                # line_speed, angle_speed = avoid_crash(robot, robot['id'], line_speed, angle_speed, robot_list)
+                line_speed, angle_speed = avoid_crash(robot, robot['id'], line_speed, angle_speed, robot_list)
                 sys.stdout.write('forward %d %d\n' % (robot['id'], line_speed))
                 sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
                 # print("\n", file=sys.stderr)
