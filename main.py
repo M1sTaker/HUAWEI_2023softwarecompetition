@@ -134,8 +134,9 @@ if __name__ == '__main__':
                 sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
                 # print("\n", file=sys.stderr)
 
-        crash_list = crash_detect(robot_list, crash_detect_distance=2)
-        if crash_list:avoid_crash_v2(crash_list)
+        #碰撞检测
+        crash_list = crash_detect(robot_list, crash_detect_distance=8)
+        if crash_list:avoid_crash_v2(robot_list, crash_list)
 
         # line_speed, angle_speed = 3, 1.5
         # for robot_id in range(4):

@@ -108,7 +108,7 @@ def crash_detect(robot_list, crash_detect_distance = 2):
             relative_speed_angle = math.atan2(relative_speed[1], relative_speed[0]) #相对速度方向
             robot_12_angle = math.atan2(robot_12_vec[1], robot_12_vec[0]) #两机器人连线方向12
 
-            crash_threshold = 2 * np.arcsin(0.45 / crash_detect_distance) #计算临界碰撞角度
+            crash_threshold = 2 * np.arcsin(0.45 / crash_detect_distance)  #计算临界碰撞角度
 
             if abs(relative_speed_angle - robot_12_angle) < crash_threshold: #碰撞情况
                 crash_list.append([robot_1['id'], robot_2['id']])
@@ -116,12 +116,12 @@ def crash_detect(robot_list, crash_detect_distance = 2):
     return crash_list
 
 #检测到碰撞后的转向
-def avoid_crash_v2( crash_list):
+def avoid_crash_v2(robot_list, crash_list):
     rotate_list = [0, 0, 0, 0] #一个id的机器人只能转一次
 
     for crash in crash_list:
         for crash_id in crash:
             if rotate_list[crash_id]: continue
             else:
-                sys.stdout.write('forward %d %d\n' % (crash_id, 2))
-                sys.stdout.write('rotate %d %f\n' % (crash_id, 2))
+                # sys.stdout.write('forward %d %d\n' % (crash_id, 4))
+                sys.stdout.write('rotate %d %f\n' % (crash_id, 2.5))
