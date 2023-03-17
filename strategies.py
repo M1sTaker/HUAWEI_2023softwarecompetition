@@ -18,22 +18,22 @@ product_work_bench_produce = [1, 2, 3, 4, 5, 6, 7]
 # 各种工作台的工作周期
 production_cycle = [50, 50, 50, 500, 500, 500, 1000, 1, 1]
 
-top_N = 50  # 取前top_N个最好的策略
+top_N = 20  # 取前top_N个最好的策略
 
 
 # work_bench_list和robot_list是主函数中获取的工作台和机器人的信息
 # strategies_of_robots为4个机器人的配送策略，形式为{目标取货工作台序号(departure_work_bench_id)，购买后目标运送货物工作台号(destination_work_bench_id),
 # 要购买和运送的货物类型编号(product_type)，机器人当前手中货物类型(carried_product_type,0表示未取货，1-7表示手中货物类型)}
-# 初始化时strategies_of_robots = [[], [], [], []]
-# 每一帧决策前调用此函数，若机器人完成了取货和送货的任务，须将strategies_of_robots对应位置置为[]再调用
+# 初始化时strategies_of_robots = [{}, {}, {}, {}]
+# 每一帧决策前调用此函数，若机器人完成了取货和送货的任务，须将strategies_of_robots对应位置策略置为{}
 # 返回函数为更新后的strategies_of_robots
 def strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id):
     # 还没有分配任务的机器人编号
-    robots_without_strategy = [robot for robot in robot_list if strategies_of_robots[robot['id']] == {}]
+    # robots_without_strategy = [robot for robot in robot_list if strategies_of_robots[robot['id']] == {}]
 
     # 如果所有机器人都已经有任务，则无需重新分配
-    if not robots_without_strategy:
-        return strategies_of_robots
+    # if not robots_without_strategy:
+    #     return strategies_of_robots
 
     # 候选购买材料目的地,格式为{工作台id(work_bench_id)，生产的物品类型(product_type)，剩余生产时间(produce_remain_time)}
     candidate_buy_destinations = []
@@ -124,7 +124,7 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id)
                      'expected_time': time})
     # 为每个机器人找出前N个平均收益最大的方案
     top_n_strategies_for_robots = []
-    for robot in robots_without_strategy:
+    for robot in robot_list:
         robot_xy = np.array([robot['x'], robot['y']])
         # top_n_strategies_for_this_robot内容格式为{取货点工作台序号(departure_work_bench_id)，送货点工作台序号(destination_work_bench_id)，
         # 配送货物类型编号(product_type)，平均每帧收益(profit_per_frame)}
@@ -136,7 +136,7 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id)
             distance_from_robot_to_departure = np.linalg.norm(robot_xy - departure_xy)
             time_from_robot_to_departure = math.ceil(distance_from_robot_to_departure / 6 * 1000 / 20)
             # 如果当前任务在游戏结束前无法完成，则直接pass
-            if (time_from_robot_to_departure + time_from_departure_to_destination)*2 > (9000 - frame_id):
+            if (time_from_robot_to_departure + time_from_departure_to_destination) * 2 > (9000 - frame_id):
                 continue
             if work_bench_list[strategy['departure_work_bench_id']][
                 'produce_remain_time'] < time_from_robot_to_departure:
@@ -163,14 +163,30 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id)
 
         top_n_strategies_for_robots.append(top_n_strategies_for_this_robot)
 
-    for i in range(len(robots_without_strategy)):  # 为每一个机器人寻找方案
-        robot = robots_without_strategy[i]
-        for strategy in top_n_strategies_for_robots[i]:  # 遍历该机器人的待选方案
+    # 若机器人R当前任务是去A工作台取货，且有另一个机器人去A工作台送货，则机器人R应该立即放弃当前任务
+    for robot in robot_list:
+        if strategies_of_robots[robot['id']] == {}:
+            continue
+        for other_robot in robot_list:
+            if robot['id'] == other_robot['id'] or strategies_of_robots[other_robot['id']] == {}:
+                continue
+            else:
+                #print(str(strategies_of_robots[robot['id']]) + "--------------------------------", file=sys.stderr)
+                if strategies_of_robots[other_robot['id']]['carried_product_type'] != 0 and \
+                        strategies_of_robots[other_robot['id']]['destination_work_bench_id'] == \
+                        strategies_of_robots[robot['id']]['departure_work_bench_id'] and \
+                        strategies_of_robots[robot['id']]['carried_product_type'] == 0:
+                    strategies_of_robots[robot['id']] = {}
+                    break
+    for robot in robot_list:  # 为每一个机器人寻找方案
+        if strategies_of_robots[robot['id']] != {}:
+            continue
+        for strategy in top_n_strategies_for_robots[robot['id']]:  # 遍历该机器人的待选方案
             if work_bench_list[strategy['departure_work_bench_id']]['produce_remain_time'] > 400:
                 continue
             flag = False  # 该方案与其他机器人已选方案是否冲突
             for selected_strategy in strategies_of_robots:  # 判断该待选方案是否和其他机器人已选择方案有冲突
-                if not selected_strategy:
+                if selected_strategy == {}:
                     continue
                 if (selected_strategy['departure_work_bench_id'] == strategy['departure_work_bench_id'] and
                     selected_strategy['product_type'] == strategy['product_type'] and selected_strategy[
