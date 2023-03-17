@@ -20,7 +20,7 @@ def move_to_xy(robot, des_x, des_y, robot_list):
 
     # 朝向：弧度[-pi，pi]  速度：m/s [-2,6]  旋转速度：弧度/s [-pi,pi]
     if (np.dot(robot_face_vec, xy_robot_vec) >= 0):  # 机器人面向向量与(工作台-机器人)向量小于90°
-        if (abs(robot_face_angle - xy_robot_vec_angle) <= 0.2):  # 夹角小于阈值时不改变方向
+        if (abs(robot_face_angle - xy_robot_vec_angle) <= 0.2):  # 夹角为0不改变方向
             for other_robot in robot_list:
                 if robot['id'] == other_robot['id']:
                     continue
@@ -34,7 +34,7 @@ def move_to_xy(robot, des_x, des_y, robot_list):
             angle_speed = -4
         else:  # 机器人向左转(逆时针)
             angle_speed = 4
-    else:# 机器人面向向量与(工作台-机器人)向量大于90°
+    else:
         line_speed = 2.0
         if (outer(robot_face_vec, xy_robot_vec) <= 0):  # 机器人向右转(顺时针)
             angle_speed = -9.0

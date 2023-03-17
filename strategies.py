@@ -136,7 +136,7 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id)
             distance_from_robot_to_departure = np.linalg.norm(robot_xy - departure_xy)
             time_from_robot_to_departure = math.ceil(distance_from_robot_to_departure / 6 * 1000 / 20)
             # 如果当前任务在游戏结束前无法完成，则直接pass
-            if time_from_robot_to_departure + time_from_departure_to_destination > (9000 - frame_id - 20):
+            if (time_from_robot_to_departure + time_from_departure_to_destination)*2 > (9000 - frame_id):
                 continue
             if work_bench_list[strategy['departure_work_bench_id']][
                 'produce_remain_time'] < time_from_robot_to_departure:
@@ -188,3 +188,10 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id)
     return strategies_of_robots
 
 
+def strategy_greedy_2(work_bench_list, robot_list):
+    work_bench_state_list = []  # wbsl[i][j], 第i行表示类型i+1的工作台的集合
+    temp_list = []
+    for i in range(9):
+        pass
+
+    return 0
