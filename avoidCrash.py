@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import sys
 import random
 def avoid_crash(robot, robot_id, line_speed, angle_speed,all_robot):
     line_speed_new = line_speed
@@ -81,3 +82,46 @@ def avoid_crash(robot, robot_id, line_speed, angle_speed,all_robot):
                 return line_speed_new, angle_speed_new
     return line_speed_new, angle_speed_new
 
+#检测碰撞函数，返回一个碰撞列表，表中元素表示会发生碰撞的机器人，如[[0, 1], [2, 3]]
+def crash_detect(robot_list, crash_detect_distance = 2):
+    #碰撞检测阈值，距离小于该值开始检测
+
+    crash_list = [] #碰撞列表
+
+    for i in range(len(robot_list)): #遍历整个机器人列表,robot为待检测
+        for j in range(i+1 ,len(robot_list)):
+            robot_1 = robot_list[i]
+            robot_2 = robot_list[j]
+            #机器人的坐标
+            robot_1_xy = np.array([robot_1['x'], robot_1['y']])
+            robot_2_xy = np.array([robot_2['x'], robot_2['y']])
+            robot_12_vec = robot_2_xy - robot_1_xy #从1到2的向量
+
+            if np.linalg.norm(robot_12_vec) > crash_detect_distance: continue  # 距离过远不检测
+
+            # 机器人的速度v向量
+            robot_1_v = np.array([robot_1['line_speed_x'], robot_1['line_speed_y']])
+            robot_2_v = np.array([robot_2['line_speed_x'], robot_2['line_speed_y']])
+
+            relative_speed =robot_1_v - robot_2_v #相对速度
+
+            relative_speed_angle = math.atan2(relative_speed[1], relative_speed[0]) #相对速度方向
+            robot_12_angle = math.atan2(robot_12_vec[1], robot_12_vec[0]) #两机器人连线方向12
+
+            crash_threshold = 2 * np.arcsin(0.45 / crash_detect_distance) #计算临界碰撞角度
+
+            if abs(relative_speed_angle - robot_12_angle) < crash_threshold: #碰撞情况
+                crash_list.append([robot_1['id'], robot_2['id']])
+
+    return crash_list
+
+#检测到碰撞后的转向
+def avoid_crash_v2( crash_list):
+    rotate_list = [0, 0, 0, 0] #一个id的机器人只能转一次
+
+    for crash in crash_list:
+        for crash_id in crash:
+            if rotate_list[crash_id]: continue
+            else:
+                sys.stdout.write('forward %d %d\n' % (crash_id, 2))
+                sys.stdout.write('rotate %d %f\n' % (crash_id, 2))
