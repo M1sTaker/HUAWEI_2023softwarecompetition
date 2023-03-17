@@ -80,3 +80,4 @@ def avoid_crash(robot, robot_id, line_speed, angle_speed,all_robot):
                     angle_speed_new = -2 + angle_speed
                 return line_speed_new, angle_speed_new
     return line_speed_new, angle_speed_new
+

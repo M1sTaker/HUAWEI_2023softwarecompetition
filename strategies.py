@@ -159,82 +159,82 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots):
 
     return strategies_of_robots
 
-def strategy_greedy_2(work_bench_list, robot_list):
-    work_bench_state_list = [] #wbsl[i][j], 第i行表示类型i+1的工作台的集合
-
-    #预处理，按工作台类型做成list
-    for i in range(9):
-        temp_list = []
-        for j in range(len(work_bench_list)):
-            if(work_bench_list[j]['type'] == i+1):
-                temp_list.append(work_bench_list[j])
-        work_bench_state_list.append(temp_list)
-
-
-    todo_list = [] #待完成的任务[购买物品的工作台， 出售物品的工作台， 物品种类]
-    request_list = [] #[工作台种类， 工作台id， 需要的物品]
-    provide_list = [] #[工作台种类， 工作台id， 提供的物品, 所需要的生产时间]
-
-    #遍历每种工作台,得到相应的request和provide  （i+1）表示实际的工作台种类
-    for type in range(9):
-        if not work_bench_state_list[type]: continue #如果该种类工作台缺失则跳过
-        for work_bench in work_bench_state_list[type]:# 遍历该种工作台
-
-            #构造provide_list
-            if work_bench['product_state'] == 1:
-                provide_list.append([work_bench['type'],work_bench['id'], 0])
-            elif work_bench['produce_remain_time'] > 0:
-                provide_list.append([work_bench['type'], work_bench['id'], work_bench['produce_remain_time']])
-
-            #构造request_list
-            # 类型4工作台，收购1和2
-            if work_bench['type'] == 4:
-                # 如果材料1空缺
-                if not work_bench['material_state'] & 2:
-                    request_list.append([work_bench['type'], work_bench['id'], 1])
-                # 如果材料2空缺
-                if not work_bench['material_state'] & 4:
-                    request_list.append([work_bench['type'], work_bench['id'], 2])
-            # 类型5工作台，收购1和3
-            if work_bench['type'] == 5:
-                # 如果材料1空缺
-                if not work_bench['material_state'] & 2:
-                    request_list.append([work_bench['type'], work_bench['id'], 1])
-                # 如果材料3空缺
-                if not work_bench['material_state'] & 8:
-                    request_list.append([work_bench['type'], work_bench['id'], 3])
-            # 类型6工作台，收购2和3
-            if work_bench['type'] == 6:
-                # 如果材料2空缺
-                if not work_bench['material_state'] & 4:
-                    request_list.append([work_bench['type'], work_bench['id'], 2])
-                # 如果材料3空缺
-                if not work_bench['material_state'] & 8:
-                    request_list.append([work_bench['type'], work_bench['id'], 3])
-            # 类型7工作台，收购4，5，6
-            if work_bench['type'] == 7:
-                # 如果材料4空缺
-                if not work_bench['material_state'] & 16:
-                    request_list.append([work_bench['type'], work_bench['id'], 4])
-                # 如果材料5空缺
-                if not work_bench['material_state'] & 32:
-                    request_list.append([work_bench['type'], work_bench['id'], 5])
-                # 如果材料6空缺
-                if not work_bench['material_state'] & 64:
-                    request_list.append([work_bench['type'], work_bench['id'], 6])
-            # 类型8工作台，收购7
-            if work_bench['type'] == 8:
-                request_list.append([work_bench['type'], work_bench['id'], 7])
-            # 类型9工作台，收购1-7
-            if work_bench['type'] == 9:
-                for i in range(7):
-                    request_list.append([work_bench['type'], work_bench['id'], i + 1])
-
-    #构造todo_list
-
-
-
-
-
-
-    return 0
+# def strategy_greedy_2(work_bench_list, robot_list, strategies_of_robots):
+#     work_bench_state_list = [] #wbsl[i][j], 第i行表示类型i+1的工作台的集合
+#
+#     #预处理，按工作台类型做成list
+#     for i in range(9):
+#         temp_list = []
+#         for j in range(len(work_bench_list)):
+#             if(work_bench_list[j]['type'] == i+1):
+#                 temp_list.append(work_bench_list[j])
+#         work_bench_state_list.append(temp_list)
+#
+#
+#     todo_list = [] #待完成的任务[购买物品的工作台， 出售物品的工作台， 物品种类]
+#     request_list = [] #[工作台种类， 工作台id， 需要的物品]
+#     provide_list = [] #[工作台种类， 工作台id， 提供的物品, 所需要的生产时间]
+#
+#     #遍历每种工作台,得到相应的request和provide  （i+1）表示实际的工作台种类
+#     for type in range(9):
+#         if not work_bench_state_list[type]: continue #如果该种类工作台缺失则跳过
+#         for work_bench in work_bench_state_list[type]:# 遍历该种工作台
+#
+#             #构造provide_list
+#             if work_bench['product_state'] == 1:
+#                 provide_list.append([work_bench['type'],work_bench['id'], 0])
+#             elif work_bench['produce_remain_time'] > 0:
+#                 provide_list.append([work_bench['type'], work_bench['id'], work_bench['produce_remain_time']])
+#
+#             #构造request_list
+#             # 类型4工作台，收购1和2
+#             if work_bench['type'] == 4:
+#                 # 如果材料1空缺
+#                 if not work_bench['material_state'] & 2:
+#                     request_list.append([work_bench['type'], work_bench['id'], 1])
+#                 # 如果材料2空缺
+#                 if not work_bench['material_state'] & 4:
+#                     request_list.append([work_bench['type'], work_bench['id'], 2])
+#             # 类型5工作台，收购1和3
+#             if work_bench['type'] == 5:
+#                 # 如果材料1空缺
+#                 if not work_bench['material_state'] & 2:
+#                     request_list.append([work_bench['type'], work_bench['id'], 1])
+#                 # 如果材料3空缺
+#                 if not work_bench['material_state'] & 8:
+#                     request_list.append([work_bench['type'], work_bench['id'], 3])
+#             # 类型6工作台，收购2和3
+#             if work_bench['type'] == 6:
+#                 # 如果材料2空缺
+#                 if not work_bench['material_state'] & 4:
+#                     request_list.append([work_bench['type'], work_bench['id'], 2])
+#                 # 如果材料3空缺
+#                 if not work_bench['material_state'] & 8:
+#                     request_list.append([work_bench['type'], work_bench['id'], 3])
+#             # 类型7工作台，收购4，5，6
+#             if work_bench['type'] == 7:
+#                 # 如果材料4空缺
+#                 if not work_bench['material_state'] & 16:
+#                     request_list.append([work_bench['type'], work_bench['id'], 4])
+#                 # 如果材料5空缺
+#                 if not work_bench['material_state'] & 32:
+#                     request_list.append([work_bench['type'], work_bench['id'], 5])
+#                 # 如果材料6空缺
+#                 if not work_bench['material_state'] & 64:
+#                     request_list.append([work_bench['type'], work_bench['id'], 6])
+#             # 类型8工作台，收购7
+#             if work_bench['type'] == 8:
+#                 request_list.append([work_bench['type'], work_bench['id'], 7])
+#             # 类型9工作台，收购1-7
+#             if work_bench['type'] == 9:
+#                 for i in range(7):
+#                     request_list.append([work_bench['type'], work_bench['id'], i + 1])
+#
+#     #构造todo_list
+#
+#
+#
+#
+#
+#
+#     return 0
