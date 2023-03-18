@@ -48,9 +48,9 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id)
         if work_bench['product_state'] == 1:
             candidate_buy_destinations.append(
                 {'work_bench_id': work_bench['id'], 'product_type': work_bench['type'], 'produce_remain_time': 0})
-        elif work_bench['produce_remain_time'] > 0:
-            candidate_buy_destinations.append({'work_bench_id': work_bench['id'], 'product_type': work_bench['type'],
-                                               'produce_remain_time': work_bench['produce_remain_time']})
+        # elif work_bench['produce_remain_time'] > 0:
+        #     candidate_buy_destinations.append({'work_bench_id': work_bench['id'], 'product_type': work_bench['type'],
+        #                                        'produce_remain_time': work_bench['produce_remain_time']})
 
         # 00000010=>2 对应材料1
         # 00000100=>4 对应材料2

@@ -135,7 +135,7 @@ if __name__ == '__main__':
                 # print("\n", file=sys.stderr)
 
         #碰撞检测
-        crash_list = crash_detect(robot_list, crash_detect_distance=8)
+        crash_list = crash_detect(robot_list, crash_detect_distance=12)
         if crash_list:avoid_crash_v2(robot_list, crash_list)
 
         # line_speed, angle_speed = 3, 1.5
