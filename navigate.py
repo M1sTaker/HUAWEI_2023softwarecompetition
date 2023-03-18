@@ -22,13 +22,14 @@ def move_to_xy(robot, des_x, des_y, robot_list):
     if (np.dot(robot_face_vec, xy_robot_vec) >= 0):  # 机器人面向向量与(工作台-机器人)向量小于90°
         if (abs(robot_face_angle - xy_robot_vec_angle) <= 0.2):  # 夹角为0不改变方向
             # 增加一点点碰撞避免，仅能避免面对面硬撞
-            # for other_robot in robot_list:
-            #     if robot['id'] == other_robot['id']:
-            #         continue
-            #     other_robot_xy = np.array([robot['x'], robot['y']])
-            #     if abs(other_robot['face_angle'] - robot['face_angle']) < math.pi - 0.1 and np.linalg.norm(
-            #             robot_xy - other_robot_xy) < 8:
-            #         return 6.0, -2
+            for other_robot in robot_list:
+                if robot['id'] == other_robot['id']:
+                    continue
+                other_robot_xy = np.array([robot['x'], robot['y']])
+                if (abs(other_robot['face_angle'] - robot['face_angle']) > math.pi - math.pi/6 or abs(
+                        other_robot['face_angle'] - robot['face_angle']) < math.pi/6) and np.linalg.norm(
+                    robot_xy - other_robot_xy) < 1:
+                    return 6, 1
             return 6.0, 0
         line_speed = 6.0
         if (outer(robot_face_vec, xy_robot_vec) <= 0):  # 机器人向右转(顺时针)

@@ -18,7 +18,7 @@ product_work_bench_produce = [1, 2, 3, 4, 5, 6, 7]
 # 各种工作台的工作周期
 production_cycle = [50, 50, 50, 500, 500, 500, 1000, 1, 1]
 
-top_N = 20  # 取前top_N个最好的策略
+top_N = 30  # 取前top_N个最好的策略
 
 
 # work_bench_list和robot_list是主函数中获取的工作台和机器人的信息
@@ -122,13 +122,33 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id)
                      'product_type': departure['product_type'],
                      'profit': product_profits[departure['product_type'] - 1],
                      'expected_time': time})
+
+    # 若机器人R当前任务是去A工作台取货，且有另一个机器人去A工作台送货，则机器人R应该立即放弃当前任务
+    for robot in robot_list:
+        if strategies_of_robots[robot['id']] == {}:
+            continue
+        for other_robot in robot_list:
+            if robot['id'] == other_robot['id'] or strategies_of_robots[other_robot['id']] == {}:
+                continue
+            else:
+                # print(str(strategies_of_robots[robot['id']]) + "--------------------------------", file=sys.stderr)
+                if strategies_of_robots[other_robot['id']]['carried_product_type'] != 0 and \
+                        strategies_of_robots[other_robot['id']]['destination_work_bench_id'] == \
+                        strategies_of_robots[robot['id']]['departure_work_bench_id'] and \
+                        strategies_of_robots[robot['id']]['carried_product_type'] == 0:
+                    strategies_of_robots[robot['id']] = {}
+                    break
+
     # 为每个机器人找出前N个平均收益最大的方案
     top_n_strategies_for_robots = []
     for robot in robot_list:
-        robot_xy = np.array([robot['x'], robot['y']])
         # top_n_strategies_for_this_robot内容格式为{取货点工作台序号(departure_work_bench_id)，送货点工作台序号(destination_work_bench_id)，
         # 配送货物类型编号(product_type)，平均每帧收益(profit_per_frame)}
         top_n_strategies_for_this_robot = []
+        if strategies_of_robots[robot['id']] != {}:
+            top_n_strategies_for_robots.append(top_n_strategies_for_this_robot)
+            continue
+        robot_xy = np.array([robot['x'], robot['y']])
         for strategy in distribution_strategies:
             time_from_departure_to_destination = strategy['expected_time']
             departure_xy = np.array([work_bench_list[strategy['departure_work_bench_id']]['x'],
@@ -163,21 +183,6 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id)
 
         top_n_strategies_for_robots.append(top_n_strategies_for_this_robot)
 
-    # 若机器人R当前任务是去A工作台取货，且有另一个机器人去A工作台送货，则机器人R应该立即放弃当前任务
-    for robot in robot_list:
-        if strategies_of_robots[robot['id']] == {}:
-            continue
-        for other_robot in robot_list:
-            if robot['id'] == other_robot['id'] or strategies_of_robots[other_robot['id']] == {}:
-                continue
-            else:
-                #print(str(strategies_of_robots[robot['id']]) + "--------------------------------", file=sys.stderr)
-                if strategies_of_robots[other_robot['id']]['carried_product_type'] != 0 and \
-                        strategies_of_robots[other_robot['id']]['destination_work_bench_id'] == \
-                        strategies_of_robots[robot['id']]['departure_work_bench_id'] and \
-                        strategies_of_robots[robot['id']]['carried_product_type'] == 0:
-                    strategies_of_robots[robot['id']] = {}
-                    break
     for robot in robot_list:  # 为每一个机器人寻找方案
         if strategies_of_robots[robot['id']] != {}:
             continue
