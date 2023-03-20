@@ -20,28 +20,34 @@ def move_to_xy(robot, des_x, des_y, robot_list):
 
     # 朝向：弧度[-pi，pi]  速度：m/s [-2,6]  旋转速度：弧度/s [-pi,pi]
     if (np.dot(robot_face_vec, xy_robot_vec) >= 0):  # 机器人面向向量与(工作台-机器人)向量小于90°
-        if (abs(robot_face_angle - xy_robot_vec_angle) <= 0.2):  # 夹角为0不改变方向
+        if (abs(robot_face_angle - xy_robot_vec_angle) <= 0.2):  # 夹角为0不改变方向,直线行驶
             # 增加一点点碰撞避免，仅能避免面对面硬撞
             for other_robot in robot_list:
                 if robot['id'] == other_robot['id']:
                     continue
-                other_robot_xy = np.array([robot['x'], robot['y']])
-                if (abs(other_robot['face_angle'] - robot['face_angle']) > math.pi - math.pi/6 or abs(
-                        other_robot['face_angle'] - robot['face_angle']) < math.pi/6) and np.linalg.norm(
-                    robot_xy - other_robot_xy) < 1:
+                # other_robot_xy = np.array([other_robot['x'], other_robot['y']])
+                # other_robot_speed = np.array([other_robot['line_speed_x'], other_robot['line_speed_y']])
+                # robot_speed = np.array([robot['line_speed_x'], robot['line_speed_y']])
+                # if (abs(other_robot['face_angle'] - robot['face_angle']) > (math.pi - math.pi/6) *1.0 or abs(
+                #         other_robot['face_angle'] - robot['face_angle']) < math.pi/6 *1.0 ) and np.linalg.norm(
+                #     robot_xy - other_robot_xy) < 1:
+                if (abs(other_robot['face_angle'] - robot['face_angle']) > (math.pi - math.pi / 6) or abs(
+                        other_robot['face_angle'] - robot['face_angle']) < math.pi / 6 ):
+                # if (np.arcsin(outer(robot_speed, other_robot_speed) / (np.linalg.norm(robot_speed) * np.linalg.norm(other_robot_speed)) < np.pi / 6)) and np.linalg.norm( \
+                #     robot_xy - other_robot_xy) < 1:
                     return 6, 1
             return 6.0, 0
         line_speed = 6.0
         if (outer(robot_face_vec, xy_robot_vec) <= 0):  # 机器人向右转(顺时针)
-            angle_speed = -4
+            angle_speed = -4.0
         else:  # 机器人向左转(逆时针)
-            angle_speed = 4
+            angle_speed = 4.0
     else:
         line_speed = 2.0
         if (outer(robot_face_vec, xy_robot_vec) <= 0):  # 机器人向右转(顺时针)
-            angle_speed = -9.0
+            angle_speed = -4.0
         else:  # 机器人向左转(逆时针)
-            angle_speed = 9.0
+            angle_speed = 4.0
 
     if (distance < 1.5):  # 快到终点时减速
         line_speed = 2.0

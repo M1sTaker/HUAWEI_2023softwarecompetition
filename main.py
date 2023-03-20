@@ -1,6 +1,8 @@
 #!/bin/bash
 import sys
 import time
+import numpy as np
+import math
 from navigate import move_to_xy
 
 from avoidCrash import avoid_crash
@@ -9,12 +11,9 @@ from avoidCrash import avoid_crash_v2
 
 from strategies import strategy_greedy
 
-
-
 def read_util_ok():
     while input() != "OK":
         pass
-
 
 def finish():
     sys.stdout.write('OK\n')
@@ -66,7 +65,9 @@ if __name__ == '__main__':
                  'crash_cost': float(line[3]),
                  'angle_speed': float(line[4]), 'line_speed_x': float(line[5]),
                  'line_speed_y': (float(line[6])), 'face_angle': float(line[7]),
-                 'x': float(line[8]), 'y': float(line[9])})
+                 'x': float(line[8]), 'y': float(line[9]),
+                 'destination': np.array([0, 0]), 'rotate_state': 0.0}
+            )
 
         sys.stdout.write('%d\n' % frame_id)
 
@@ -113,10 +114,16 @@ if __name__ == '__main__':
                 # print("机器人" + str(robot['id']) + ":" + str(robot), file=sys.stderr)
                 # print("策略：" + str(strategy), file=sys.stderr)
                 # print("目标工作台:" + str(work_bench_list[strategy[0]]), file=sys.stderr)
-                line_speed, angle_speed = move_to_xy(robot, work_bench_list[strategy['departure_work_bench_id']]['x'],
-                                                     work_bench_list[strategy['departure_work_bench_id']]['y'],
+                robot['destination'] = np.array([work_bench_list[strategy['departure_work_bench_id']]['x'],
+                                                work_bench_list[strategy['departure_work_bench_id']]['y']])
+                # line_speed, angle_speed = move_to_xy(robot, work_bench_list[strategy['departure_work_bench_id']]['x'],
+                #                                      work_bench_list[strategy['departure_work_bench_id']]['y'],
+                #                                      robot_list)
+                line_speed, angle_speed = move_to_xy(robot, robot['destination'][0], robot['destination'][1],
                                                      robot_list)
-                # line_speed, angle_speed = avoid_crash(robot, robot['id'], line_speed, angle_speed, robot_list)
+                robot['rotate_state'] = angle_speed
+
+
                 sys.stdout.write('forward %d %d\n' % (robot['id'], line_speed))
                 sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
                 # print("\n", file=sys.stderr)
@@ -126,17 +133,24 @@ if __name__ == '__main__':
                 # print("机器人" + str(robot['id']) + ":" + str(robot), file=sys.stderr)
                 # print("策略：" + str(strategy), file=sys.stderr)
                 # print("目标工作台:" + str(work_bench_list[strategy[1]]), file=sys.stderr)
-                line_speed, angle_speed = move_to_xy(robot, work_bench_list[strategy['destination_work_bench_id']]['x'],
-                                                     work_bench_list[strategy['destination_work_bench_id']]['y'],
+                robot['destination'] = np.array([work_bench_list[strategy['destination_work_bench_id']]['x'],
+                                                work_bench_list[strategy['destination_work_bench_id']]['y']])
+                # line_speed, angle_speed = move_to_xy(robot, work_bench_list[strategy['destination_work_bench_id']]['x'],
+                #                                      work_bench_list[strategy['destination_work_bench_id']]['y'],
+                #                                      robot_list)
+                line_speed, angle_speed = move_to_xy(robot, robot['destination'][0], robot['destination'][1],
                                                      robot_list)
-                # line_speed, angle_speed = avoid_crash(robot, robot['id'], line_speed, angle_speed, robot_list)
+                robot['rotate_state'] = angle_speed
+
+
                 sys.stdout.write('forward %d %d\n' % (robot['id'], line_speed))
                 sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
                 # print("\n", file=sys.stderr)
 
         #碰撞检测
-        crash_list = crash_detect(robot_list, crash_detect_distance=12)
-        if crash_list:avoid_crash_v2(robot_list, crash_list)
+        crash_list = crash_detect(robot_list, crash_detect_distance=2)
+        if crash_list:
+            avoid_crash_v2(robot_list, crash_list)
 
         # line_speed, angle_speed = 3, 1.5
         # for robot_id in range(4):

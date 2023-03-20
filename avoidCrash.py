@@ -1,24 +1,87 @@
 import numpy as np
 import math
 import sys
-import random
-def avoid_crash(robot, robot_id, line_speed, angle_speed,all_robot):
+from halfplaneintersect import halfplane_optimize, Line, perp
+
+def normalized(x): #标准化
+    l = np.dot(x,x)
+    assert l > 0, (x, l)
+    return x / np.sqrt(l)
+
+def outer(arr1, arr2):#计算外积,用于判断转向的方向
+    return arr1[0] * arr2[1] - arr1[1] * arr2[0]
+
+def orca(robot, other_robot, t, dt,pre_speed):
+    properVecs = []
+    for otherRobot in other_robot:
+        dv, n = GetAvoiVec(robot, otherRobot, t, dt)
+        line = Line(np.array([robot['line_speed_x'], robot['line_speed_y']])+ dv / 2, n)
+        properVecs.append(line)
+        robot_pro_speed = halfplane_optimize(properVecs, pre_speed) #机器人的最佳速度向量
+        line_speed = np.linalg.norm(robot_pro_speed)
+        robot_face_angle = robot['face_angle']  # 机器人朝向
+        robot_face_vec = np.array([np.cos(robot_face_angle), np.sin(robot_face_angle)])  # 机器人朝向向量
+        robot_proface_vec = np.array([robot_pro_speed[0], robot_pro_speed[1]])  # #机器人的最佳朝向向量
+        if (np.dot(robot_face_vec, robot_proface_vec) >= 0):
+            if (outer(robot_face_vec, robot_proface_vec) <= 0):  # 机器人向右转(顺时针)
+                angle_speed = -4.0
+            else:  # 机器人向左转(逆时针)
+                angle_speed = 4.0
+        else:
+            if (outer(robot_face_vec, robot_proface_vec) <= 0):  # 机器人向右转(顺时针)
+                angle_speed = -9.0
+            else:  # 机器人向左转(逆时针)
+                angle_speed = 9.0
+    return line_speed, angle_speed
+
+def GetAvoiVec(robot, otherRobot, t, dt):
+    robot_pos = np.array([robot['x'],robot['y']])
+    otherRobot_pos = np.array([otherRobot['x'], otherRobot['y']])
+    x = -(robot_pos - otherRobot_pos)   #其他碰撞机器人相对于本机器人的位置
+    v = np.array([robot['line_speed_x'], robot['line_speed_y']]) - np.array([otherRobot['line_speed_x'], otherRobot['line_speed_y']])      #本机器人相对于其他机器人的速度
+    if robot['carried_product_type']==0:
+        radius_robot = 0.45
+    else:
+        radius_robot = 0.53
+    if otherRobot['carried_product_type']==0:
+        radius_otherRobot = 0.45
+    else:
+        radius_otherRobot = 0.53
+    r = radius_robot + radius_otherRobot         #两个机器人的半径和
+
+    x_len_sq = np.linalg.norm(x)                        #相对位置信息的向量内积
+
+    if x_len_sq >= r * r:                        #如果两个机器人没有发生碰撞
+        adjusted_center = x/t * (1 - (r*r)/x_len_sq)    #将位置坐标中心转换为速度坐标中心
+
+        if np.dot(v - adjusted_center, adjusted_center) < 0:
+            w = v - x/t
+            u = normalized(w) * r/t - w
+            n = normalized(w)
+        else:
+            deta_len = np.sqrt(x_len_sq - r*r)
+            sine = np.copysign(r, np.linalg.det((v, x)))
+            rot = np.array(((deta_len, sine),(-sine, deta_len)))
+            rotated_x = rot.dot(x) / x_len_sq
+            n = perp(rotated_x)
+            if sine < 0:
+                n = -n
+            u = rotated_x * np.dot(v, rotated_x) - v
+    else:
+        w = v - x/dt
+        u = normalized(w) * r/dt - w
+        n = normalized(w)
+    return u, n
+
+def avoid_wall(robot, robot_id, line_speed,angle_speed):
     line_speed_new = line_speed
     angle_speed_new = angle_speed
-    line_speed_new_list = [2,4,6]
-    # angle_speed_new_list = [-2,0,1,2]
-    d_min = 2.5
-
     if robot['carried_product_type']:
         if (robot['x'] <= 0.5 and robot['y'] <= 0.5 and  robot['face_angle'] >= -np.pi-0.1 and robot['face_angle'] <= -np.pi/2+0.1)\
                 or (robot['x'] <= 0.5 and robot['y'] >=49.5 and  robot['face_angle'] >= np.pi/2-0.1 and robot['face_angle'] <= np.pi+0.1) \
                 or (robot['x'] >=49.5 and robot['y'] <= 0.5 and  robot['face_angle'] >= -np.pi/2-0.1 and robot['face_angle'] <= 0+0.1) \
                 or (robot['x'] >=49.5 and robot['y'] >=49.5 and  robot['face_angle'] >= 0-0.1 and robot['face_angle'] <= np.pi/2+0.1):
             line_speed_new = 1
-            # if robot['face_angle'] >= 0:
-            #     angle_speed_new = -3
-            # else:
-            #     angle_speed_new = 3
             return line_speed_new, angle_speed_new
         if robot['x']<=0.5 and (robot['face_angle']>-np.pi/2 and robot['face_angle']<0 or robot['face_angle']>np.pi/2 and robot['face_angle']<np.pi)\
                 or robot['x'] >=49.5 and robot['face_angle']>-np.pi/2 and robot['face_angle']<np.pi/2\
@@ -30,60 +93,22 @@ def avoid_crash(robot, robot_id, line_speed, angle_speed,all_robot):
             else:
                 angle_speed_new = -2+angle_speed
             return line_speed_new, angle_speed_new
-    for i in range(4):
-        if i == robot_id:
-            continue
-        if (float(all_robot[i]['x'])-float(robot['x']))**2+(float(all_robot[i]['y'])-float(robot['y']))**2 <= d_min**2:
-            AB = np.array([float(all_robot[i]['x'])-float(robot['x']), float(all_robot[i]['y'])-float(robot['y'])]) #本机器人指向碰撞机器人的向量，简称L1
-            BA = np.array([float(robot['x'])-float(all_robot[i]['x']), float(robot['y'])-float(all_robot[i]['y'])]) #碰撞机器人指向本机器人的向量，简称L2
-            theta1 = robot['face_angle'] #本机器人的朝向角
-            D1 = np.array([math.cos(theta1), math.sin(theta1)]) #本机器人的朝向向量
-            theta2 = all_robot[i]['face_angle']  #碰撞机器人的朝向角
-            D2 = np.array([math.cos(theta2),math.sin(theta2)]) #碰撞机器人的碰撞向量
-            theta = robot['face_angle']-all_robot[i]['face_angle']  #两个机器人朝向的夹角
-            cos_A1 = np.dot(AB, D1)/(np.linalg.norm(AB)*np.linalg.norm(D1))
-            cos_B2 = np.dot(BA, D2)/(np.linalg.norm(BA)*np.linalg.norm(D2))
-            cos_theta = math.cos(theta)
-            AB_len = math.sqrt((float(all_robot[i]['x'])-float(robot['x']))**2+(float(all_robot[i]['y'])-float(robot['y']))**2)
-            D1_m = (abs(BA[0]*D2[1]-BA[1]*D2[0])/(np.linalg.norm(BA)*np.linalg.norm(D2)))*(math.sin(theta)/AB_len)
-            D2_m = (abs(AB[0]*D1[1]-AB[1]*D1[0])/(np.linalg.norm(AB)*np.linalg.norm(D1)))*(math.sin(theta)/AB_len)
-            if cos_A1>=0.99 and cos_B2>=0.99:
-                if robot['face_angle'] >= 0:
-                    angle_speed_new = 2+angle_speed-all_robot[i]['angle_speed']
-                else:
-                    angle_speed_new = -2+angle_speed+all_robot[i]['angle_speed']
-                if (robot['carried_product_type'] or all_robot[i]['carried_product_type']) and line_speed>=0:
-                    line_speed_new = all_robot[i]['line_speed_x']/math.cos(all_robot[i]['face_angle'])-2
-                else:
-                    line_speed_new = all_robot[i]['line_speed_x'] / math.cos(all_robot[i]['face_angle']) + 2
-                return line_speed_new, angle_speed_new
-            if cos_A1>0:
-                cos_A1 = 1
-            if cos_A1<0:
-                cos_A1 = -1
-            if cos_B2>0:
-                cos_B2 = 1
-            if cos_B2<0:
-                cos_B2 = -1
-            if cos_theta > 0:
-                cos_theta = 1
-            if cos_theta < 0:
-                cos_theta = -1
-            #if cos_A1+cos_B2+cos_theta>=2 and robot['line_speed']:
-            if cos_A1 + cos_B2 + cos_theta >= 2 \
-                     and D1_m/(robot['line_speed_x']/math.cos(robot['face_angle']))-D2_m/(all_robot[i]['line_speed_x']/math.cos(all_robot[i]['face_angle']))<=0.5:
-                line_speed_new = line_speed
-                if robot['carried_product_type'] and (float(all_robot[i]['x'])-float(robot['x']))**2+(float(all_robot[i]['y'])-float(robot['y']))**2<=1**2:
-                    line_speed_new = line_speed-2
-                if robot['face_angle'] >= 0:
-                    angle_speed_new = 2 + angle_speed
-                else:
-                    angle_speed_new = -2 + angle_speed
-                return line_speed_new, angle_speed_new
+    return line_speed_new, angle_speed_new
+
+def avoid_crash(robot, other_robot_list, pre_speed,line_speed,angle_speed):
+    d_min = 1.0
+    line_speed_new = line_speed
+    angle_speed_new = angle_speed
+    crash_robots = []
+    for other_robot in other_robot_list:
+        if (float(other_robot['x'])-float(robot['x']))**2+(float(other_robot['y'])-float(robot['y']))**2 <= d_min**2:
+            crash_robots.append(other_robot)
+    if crash_robots:
+        line_speed_new, angle_speed_new = orca(robot, crash_robots, 0.02, 1.3, pre_speed)
     return line_speed_new, angle_speed_new
 
 #检测碰撞函数，返回一个碰撞列表，表中元素表示会发生碰撞的机器人，如[[0, 1], [2, 3]]
-def crash_detect(robot_list, crash_detect_distance = 2):
+def crash_detect(robot_list, crash_detect_distance = 4):
     #碰撞检测阈值，距离小于该值开始检测
 
     crash_list = [] #碰撞列表
@@ -108,7 +133,7 @@ def crash_detect(robot_list, crash_detect_distance = 2):
             relative_speed_angle = math.atan2(relative_speed[1], relative_speed[0]) #相对速度方向
             robot_12_angle = math.atan2(robot_12_vec[1], robot_12_vec[0]) #两机器人连线方向12
 
-            crash_threshold = 2 * np.arcsin(0.45 / crash_detect_distance)  #计算临界碰撞角度
+            crash_threshold = 2 * np.arcsin(0.45 / crash_detect_distance) *1.4 #计算临界碰撞角度
 
             if abs(relative_speed_angle - robot_12_angle) < crash_threshold: #碰撞情况
                 crash_list.append([robot_1['id'], robot_2['id']])
@@ -117,11 +142,45 @@ def crash_detect(robot_list, crash_detect_distance = 2):
 
 #检测到碰撞后的转向
 def avoid_crash_v2(robot_list, crash_list):
-    rotate_list = [0, 0, 0, 0] #一个id的机器人只能转一次
+    rotate_list = [0, 0, 0, 0] #机器人在防碰撞策略中的转向次数
+    slow_list = [0, 0, 0, 0] #机器人在防碰撞策略中的减速次数
 
     for crash in crash_list:
-        for crash_id in crash:
-            if rotate_list[crash_id]: continue
-            else:
-                # sys.stdout.write('forward %d %d\n' % (crash_id, 4))
-                sys.stdout.write('rotate %d %f\n' % (crash_id, 2.5))
+        #若两个机器人均为直行
+        if robot_list[crash[0]]['rotate_state'] == robot_list[crash[0]]['rotate_state'] == 0:
+            sys.stdout.write('rotate %d %f\n' % (crash[0], 1))
+            sys.stdout.write('rotate %d %f\n' % (crash[1], 1))
+            rotate_list[crash[0]] += 1
+            rotate_list[crash[1]] += 1
+        #若一个直行一个转向
+        elif robot_list[crash[0]]['rotate_state'] == 0.0 or robot_list[crash[1]]['rotate_state'] == 0.0:
+            #记录转向机器人在crash中的下标
+            if robot_list[crash[0]]['rotate_state'] == 0.0: avoid_index = 1
+            else: avoid_index = 0
+            #不直行的那个要转向或减速
+            #若转向的机器人转向速度已到极限，则减速
+            if np.abs(robot_list[crash[avoid_index]]['rotate_state']) == 4.0:
+                old_line_speed = np.linalg.norm(
+                    np.array([robot_list[crash[avoid_index]]['line_speed_x'], robot_list[crash[avoid_index]]['line_speed_y']]))
+                sys.stdout.write('forward %d %d\n' % (crash[avoid_index], math.ceil(old_line_speed)))
+                slow_list[crash[avoid_index]] += 1
+            else: #若转向机器人转向速度未到极限
+                sys.stdout.write('rotate %d %f\n' % (crash[avoid_index], 4.0 *
+                                                     np.abs(robot_list[crash[avoid_index]]['rotate_state'])/robot_list[crash[avoid_index]]['rotate_state']))
+                rotate_list[crash[avoid_index]] += 1
+        #若两个都转向
+        else:
+            #计算两个机器人的避让次数，次数低的优先避让
+            if rotate_list[crash[0]] + slow_list[crash[0]] <= rotate_list[crash[1]] + slow_list[crash[1]]: avoid_index = 0
+            else: avoid_index = 1
+            old_line_speed = np.linalg.norm(
+                np.array(
+                    [robot_list[crash[avoid_index]]['line_speed_x'], robot_list[crash[avoid_index]]['line_speed_y']]))
+            sys.stdout.write('forward %d %d\n' % (crash[avoid_index], math.ceil(old_line_speed)))
+            slow_list[crash[avoid_index]] += 1
+
+
+        # old_line_speed = np.linalg.norm(np.array([robot_list[crash_id]['line_speed_x'], robot_list[crash_id]['line_speed_y']]))
+        # sys.stdout.write('forward %d %d\n' % (crash_id, math.ceil(old_line_speed)))
+        # sys.stdout.write('rotate %d %f\n' % (crash_id, 2))
+        # rotate_list[crash_id] += 1
