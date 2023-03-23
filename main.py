@@ -5,15 +5,16 @@ import numpy as np
 import math
 from navigate import move_to_xy
 
-from avoidCrash import avoid_crash
 from avoidCrash import crash_detect
 from avoidCrash import avoid_crash_v2
 
 from strategies import strategy_greedy
 
+
 def read_util_ok():
     while input() != "OK":
         pass
+
 
 def finish():
     sys.stdout.write('OK\n')
@@ -24,6 +25,9 @@ if __name__ == '__main__':
     # time.sleep(10)
     read_util_ok()  # 初始化完成
     finish()  # 初始化完成输出一个OK
+
+    # 4，5，6,7类型工作台产物最近的销售地，key为4，5，6，7类型工作台id，value为最近销售目标工作台id和距离
+    nearest_sell_place = {}
 
     strategies_of_robots = [{}, {}, {}, {}]
     while True:
@@ -40,6 +44,7 @@ if __name__ == '__main__':
         # print("帧数:" + str(frame_id) + "; 得分:" + str(parts[1]) + "工作台数量：" + str(num_of_work_bench), file=sys.stderr)
         # 下面K行为工作站信息
         work_bench_list = []
+        work_bench_list_by_type = [[], [], [], [], [], [], [], [], []]
         for i in range(num_of_work_bench):
             line = sys.stdin.readline().strip().split(' ')
             # 工作台类型，整数，1-9
@@ -52,6 +57,43 @@ if __name__ == '__main__':
                  'produce_remain_time': int((line[3])),
                  'material_state': int(line[4]),
                  'product_state': int(line[5])})
+            work_bench_list_by_type[work_bench_list[i]['type'] - 1].append(work_bench_list[i])
+
+        # 只需要在第一帧的时候记录nearest_sell_place就行
+        if frame_id == 1:
+            for work_bench in work_bench_list:
+                if work_bench['type'] == 4:
+                    work_bench_xy = np.array([work_bench['x'], work_bench['y']])
+                    nearest_sell_place[work_bench['id']] = {'id': -1, 'distance': 9999}
+                    for other_work_bench in work_bench_list_by_type[5]:
+                        other_work_bench_xy = np.array([other_work_bench['x'], other_work_bench['y']])
+                        distance = np.linalg.norm(work_bench_xy - other_work_bench_xy)
+                        if distance < nearest_sell_place[work_bench['id']]['distance']:
+                            nearest_sell_place[work_bench['id']] = {'id': other_work_bench['id'], 'distance': distance}
+                if work_bench['type'] == 5:
+                    work_bench_xy = np.array([work_bench['x'], work_bench['y']])
+                    nearest_sell_place[work_bench['id']] = {'id': -1, 'distance': 9999}
+                    for other_work_bench in work_bench_list_by_type[6]:
+                        other_work_bench_xy = np.array([other_work_bench['x'], other_work_bench['y']])
+                        distance = np.linalg.norm(work_bench_xy - other_work_bench_xy)
+                        if distance < nearest_sell_place[work_bench['id']]['distance']:
+                            nearest_sell_place[work_bench['id']] = {'id': other_work_bench['id'], 'distance': distance}
+                if work_bench['type'] == 6:
+                    work_bench_xy = np.array([work_bench['x'], work_bench['y']])
+                    nearest_sell_place[work_bench['id']] = {'id': -1, 'distance': 9999}
+                    for other_work_bench in work_bench_list_by_type[7]:
+                        other_work_bench_xy = np.array([other_work_bench['x'], other_work_bench['y']])
+                        distance = np.linalg.norm(work_bench_xy - other_work_bench_xy)
+                        if distance < nearest_sell_place[work_bench['id']]['distance']:
+                            nearest_sell_place[work_bench['id']] = {'id': other_work_bench['id'], 'distance': distance}
+                if work_bench['type'] == 7:
+                    work_bench_xy = np.array([work_bench['x'], work_bench['y']])
+                    nearest_sell_place[work_bench['id']] = {'id': -1, 'distance': 9999}
+                    for other_work_bench in work_bench_list_by_type[8]:
+                        other_work_bench_xy = np.array([other_work_bench['x'], other_work_bench['y']])
+                        distance = np.linalg.norm(work_bench_xy - other_work_bench_xy)
+                        if distance < nearest_sell_place[work_bench['id']]['distance']:
+                            nearest_sell_place[work_bench['id']] = {'id': other_work_bench['id'], 'distance': distance}
 
         # 读取4个机器人信息
         robot_list = []
@@ -66,12 +108,17 @@ if __name__ == '__main__':
                  'angle_speed': float(line[4]), 'line_speed_x': float(line[5]),
                  'line_speed_y': (float(line[6])), 'face_angle': float(line[7]),
                  'x': float(line[8]), 'y': float(line[9]),
-                 'destination': np.array([0, 0]), 'rotate_state': 0.0}
+                 'destination': np.array([0, 0]), 'rotate_state': 0.0,
+                 'angle_speed_up': 100 / (math.pi * 20 * pow(0.45, 4)) if int(line[1]) == 0 else 100 / (
+                         math.pi * 20 * pow(0.53, 4)),
+                 'line_speed_up': 250 / (math.pi * 20 * pow(0.45, 2)) if int(line[1]) == 0 else 100 / (
+                         math.pi * 20 * pow(0.53, 4))},
             )
 
         sys.stdout.write('%d\n' % frame_id)
 
-        strategies_of_robots = strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id)
+        strategies_of_robots = strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id,
+                                               nearest_sell_place)
 
         # 看看每个机器人能不能购买或售出物品
         # print("此处为调试购买或售出物品判断：", file=sys.stderr)
@@ -115,14 +162,13 @@ if __name__ == '__main__':
                 # print("策略：" + str(strategy), file=sys.stderr)
                 # print("目标工作台:" + str(work_bench_list[strategy[0]]), file=sys.stderr)
                 robot['destination'] = np.array([work_bench_list[strategy['departure_work_bench_id']]['x'],
-                                                work_bench_list[strategy['departure_work_bench_id']]['y']])
+                                                 work_bench_list[strategy['departure_work_bench_id']]['y']])
                 # line_speed, angle_speed = move_to_xy(robot, work_bench_list[strategy['departure_work_bench_id']]['x'],
                 #                                      work_bench_list[strategy['departure_work_bench_id']]['y'],
                 #                                      robot_list)
                 line_speed, angle_speed = move_to_xy(robot, robot['destination'][0], robot['destination'][1],
                                                      robot_list)
                 robot['rotate_state'] = angle_speed
-
 
                 sys.stdout.write('forward %d %d\n' % (robot['id'], line_speed))
                 sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
@@ -134,7 +180,7 @@ if __name__ == '__main__':
                 # print("策略：" + str(strategy), file=sys.stderr)
                 # print("目标工作台:" + str(work_bench_list[strategy[1]]), file=sys.stderr)
                 robot['destination'] = np.array([work_bench_list[strategy['destination_work_bench_id']]['x'],
-                                                work_bench_list[strategy['destination_work_bench_id']]['y']])
+                                                 work_bench_list[strategy['destination_work_bench_id']]['y']])
                 # line_speed, angle_speed = move_to_xy(robot, work_bench_list[strategy['destination_work_bench_id']]['x'],
                 #                                      work_bench_list[strategy['destination_work_bench_id']]['y'],
                 #                                      robot_list)
@@ -142,12 +188,11 @@ if __name__ == '__main__':
                                                      robot_list)
                 robot['rotate_state'] = angle_speed
 
-
                 sys.stdout.write('forward %d %d\n' % (robot['id'], line_speed))
                 sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
                 # print("\n", file=sys.stderr)
 
-        #碰撞检测
+        # 碰撞检测
         crash_list = crash_detect(robot_list, crash_detect_distance=2)
         if crash_list:
             avoid_crash_v2(robot_list, crash_list)
