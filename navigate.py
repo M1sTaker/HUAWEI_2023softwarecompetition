@@ -49,6 +49,6 @@ def move_to_xy(robot, des_x, des_y, robot_list):
         else:  # 机器人向左转(逆时针)
             angle_speed = 4.0
 
-    if (distance < 1.5):  # 快到终点时减速
+    if (distance < 2.0):  # 快到终点时减速
         line_speed = 2.0
     return line_speed, angle_speed

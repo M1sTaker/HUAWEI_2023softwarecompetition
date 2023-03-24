@@ -8,7 +8,7 @@ from navigate import move_to_xy
 from avoidCrash import crash_detect
 from avoidCrash import avoid_crash_v2
 
-from strategies import strategy_greedy
+from strategies import strategy_greedy, strategy_greedy_for_map_34, strategy_greedy_for_map_2
 
 
 def read_util_ok():
@@ -30,6 +30,7 @@ if __name__ == '__main__':
     nearest_sell_place = {}
 
     strategies_of_robots = [{}, {}, {}, {}]
+
     while True:
         line = sys.stdin.readline()
         if not line:
@@ -45,6 +46,18 @@ if __name__ == '__main__':
         # 下面K行为工作站信息
         work_bench_list = []
         work_bench_list_by_type = [[], [], [], [], [], [], [], [], []]
+        # 各类型工作台统计信息，key为工作台类型，value为工作台类型统计信息，以字典形式存储，
+        # 格式为{num_of_this_type,num_of_products,num_of_producing,num_of_material_type_x}
+        work_bench_statistics_by_type = {
+            '4': {'num_of_this_type': 0, 'num_of_products': 0, 'num_of_producing': 0, 'num_of_material_type_1': 0,
+                  'num_of_material_type_2': 0},
+            '5': {'num_of_this_type': 0, 'num_of_products': 0, 'num_of_producing': 0, 'num_of_material_type_1': 0,
+                  'num_of_material_type_3': 0},
+            '6': {'num_of_this_type': 0, 'num_of_products': 0, 'num_of_producing': 0, 'num_of_material_type_2': 0,
+                  'num_of_material_type_3': 0},
+            '7': {'num_of_this_type': 0, 'num_of_products': 0, 'num_of_producing': 0, 'num_of_material_type_4': 0,
+                  'num_of_material_type_5': 0, 'num_of_material_type_6': 0}
+        }
         for i in range(num_of_work_bench):
             line = sys.stdin.readline().strip().split(' ')
             # 工作台类型，整数，1-9
@@ -52,13 +65,57 @@ if __name__ == '__main__':
             # 剩余生产时间，整数（单位：帧）
             # 原材料格状态，整数，二进制位表描述，例如 48(110000) 表示拥有物品 4 和 5。
             # 产品格状态，整数，0表示无，1表示有
-            work_bench_list.append(
-                {'id': i, 'type': int(line[0]), 'x': float(line[1]), 'y': float(line[2]),
-                 'produce_remain_time': int((line[3])),
-                 'material_state': int(line[4]),
-                 'product_state': int(line[5])})
-            work_bench_list_by_type[work_bench_list[i]['type'] - 1].append(work_bench_list[i])
-
+            work_bench = {'id': i, 'type': int(line[0]), 'x': float(line[1]), 'y': float(line[2]),
+                          'produce_remain_time': int((line[3])),
+                          'material_state': int(line[4]),
+                          'product_state': int(line[5])}
+            work_bench_list.append(work_bench)
+            if frame_id == 1:
+                work_bench_list_by_type[work_bench_list[i]['type'] - 1].append(work_bench_list[i])
+            # 针对图1的策略
+            if num_of_work_bench == 43:
+                if work_bench['type'] == 4:
+                    work_bench_statistics_by_type['4']['num_of_this_type'] += 1
+                    if work_bench['product_state'] == 1:
+                        work_bench_statistics_by_type['4']['num_of_products'] += 1
+                    if work_bench['produce_remain_time'] >= 0:
+                        work_bench_statistics_by_type['4']['num_of_producing'] += 1
+                    if work_bench['material_state'] & 2:
+                        work_bench_statistics_by_type['4']['num_of_material_type_1'] += 1
+                    if work_bench['material_state'] & 4:
+                        work_bench_statistics_by_type['4']['num_of_material_type_2'] += 1
+                elif work_bench['type'] == 5:
+                    work_bench_statistics_by_type['5']['num_of_this_type'] += 1
+                    if work_bench['product_state'] == 1:
+                        work_bench_statistics_by_type['5']['num_of_products'] += 1
+                    if work_bench['produce_remain_time'] >= 0:
+                        work_bench_statistics_by_type['5']['num_of_producing'] += 1
+                    if work_bench['material_state'] & 2:
+                        work_bench_statistics_by_type['5']['num_of_material_type_1'] += 1
+                    if work_bench['material_state'] & 8:
+                        work_bench_statistics_by_type['5']['num_of_material_type_3'] += 1
+                elif work_bench['type'] == 6:
+                    work_bench_statistics_by_type['6']['num_of_this_type'] += 1
+                    if work_bench['product_state'] == 1:
+                        work_bench_statistics_by_type['6']['num_of_products'] += 1
+                    if work_bench['produce_remain_time'] >= 0:
+                        work_bench_statistics_by_type['6']['num_of_producing'] += 1
+                    if work_bench['material_state'] & 4:
+                        work_bench_statistics_by_type['6']['num_of_material_type_2'] += 1
+                    if work_bench['material_state'] & 8:
+                        work_bench_statistics_by_type['6']['num_of_material_type_3'] += 1
+                elif work_bench['type'] == 7:
+                    work_bench_statistics_by_type['7']['num_of_this_type'] += 1
+                    if work_bench['product_state'] == 1:
+                        work_bench_statistics_by_type['7']['num_of_products'] += 1
+                    if work_bench['produce_remain_time'] >= 0:
+                        work_bench_statistics_by_type['7']['num_of_producing'] += 1
+                    if work_bench['material_state'] & 16:
+                        work_bench_statistics_by_type['7']['num_of_material_type_4'] += 1
+                    if work_bench['material_state'] & 32:
+                        work_bench_statistics_by_type['7']['num_of_material_type_5'] += 1
+                    if work_bench['material_state'] & 64:
+                        work_bench_statistics_by_type['7']['num_of_material_type_6'] += 1
         # 只需要在第一帧的时候记录nearest_sell_place就行
         if frame_id == 1:
             for work_bench in work_bench_list:
@@ -117,8 +174,18 @@ if __name__ == '__main__':
 
         sys.stdout.write('%d\n' % frame_id)
 
-        strategies_of_robots = strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id,
-                                               nearest_sell_place)
+        if num_of_work_bench == 43:
+            strategies_of_robots = strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id,
+                                                   nearest_sell_place, work_bench_statistics_by_type)
+        if num_of_work_bench == 25:
+            strategies_of_robots = strategy_greedy_for_map_2(work_bench_list, robot_list, strategies_of_robots,
+                                                             frame_id,
+                                                             nearest_sell_place)
+
+        else:
+            strategies_of_robots = strategy_greedy_for_map_34(work_bench_list, robot_list, strategies_of_robots,
+                                                              frame_id,
+                                                              nearest_sell_place)
 
         # 看看每个机器人能不能购买或售出物品
         # print("此处为调试购买或售出物品判断：", file=sys.stderr)
