@@ -3,7 +3,6 @@ import math
 import sys
 
 
-
 def outer(arr1, arr2):  # 计算外积,用于判断转向的方向
     return arr1[0] * arr2[1] - arr1[1] * arr2[0]
 
@@ -51,6 +50,39 @@ def avoid_crash(robot, other_robot_list, pre_speed, line_speed, angle_speed):
     return line_speed_new, angle_speed_new
 
 
+# 安全范围检测,与crash_detect类似,返回一个可能与当前机器人发生碰撞的列表
+def safe_detect(robot, robot_list, safe_radius=2):
+    # 碰撞检测阈值，距离小于该值开始检测
+
+    crash_list = []  # 碰撞列表
+
+    for i in range(len(robot_list)):  # 遍历整个机器人列表,robot为待检测
+        if i == robot['id']: continue
+        robot_2 = robot_list[i]
+        # 机器人的坐标
+        robot_1_xy = np.array([robot['x'], robot['y']])
+        robot_2_xy = np.array([robot_2['x'], robot_2['y']])
+        robot_12_vec = robot_2_xy - robot_1_xy  # 从1到2的向量
+
+        if np.linalg.norm(robot_12_vec) > safe_radius: continue  # 距离过远不检测
+
+        # 机器人的速度v向量
+        robot_1_v = np.array([robot_1['line_speed_x'], robot_1['line_speed_y']])
+        robot_2_v = np.array([robot_2['line_speed_x'], robot_2['line_speed_y']])
+
+        relative_speed = robot_1_v - robot_2_v  # 相对速度
+
+        relative_speed_angle = math.atan2(relative_speed[1], relative_speed[0])  # 相对速度方向
+        robot_12_angle = math.atan2(robot_12_vec[1], robot_12_vec[0])  # 两机器人连线方向12
+
+        crash_threshold = 2 * np.arcsin(0.45 / crash_detect_distance) * 1.4  # 计算临界碰撞角度
+
+        if abs(relative_speed_angle - robot_12_angle) < crash_threshold:  # 碰撞情况
+            crash_list.append([robot_1['id'], robot_2['id']])
+
+    return crash_list
+
+
 # 检测碰撞函数，返回一个碰撞列表，表中元素表示会发生碰撞的机器人，如[[0, 1], [2, 3]]
 def crash_detect(robot_list, crash_detect_distance=4):
     # 碰撞检测阈值，距离小于该值开始检测
@@ -65,8 +97,9 @@ def crash_detect(robot_list, crash_detect_distance=4):
             robot_1_xy = np.array([robot_1['x'], robot_1['y']])
             robot_2_xy = np.array([robot_2['x'], robot_2['y']])
             robot_12_vec = robot_2_xy - robot_1_xy  # 从1到2的向量
+            robot_12_dis = np.linalg.norm(robot_12_vec)
 
-            if np.linalg.norm(robot_12_vec) > crash_detect_distance: continue  # 距离过远不检测
+            if robot_12_dis > crash_detect_distance: continue  # 距离过远不检测
 
             # 机器人的速度v向量
             robot_1_v = np.array([robot_1['line_speed_x'], robot_1['line_speed_y']])
@@ -77,7 +110,8 @@ def crash_detect(robot_list, crash_detect_distance=4):
             relative_speed_angle = math.atan2(relative_speed[1], relative_speed[0])  # 相对速度方向
             robot_12_angle = math.atan2(robot_12_vec[1], robot_12_vec[0])  # 两机器人连线方向12
 
-            crash_threshold = 2 * np.arcsin(0.45 / crash_detect_distance) * 1.4  # 计算临界碰撞角度
+            # crash_threshold = 2 * np.arcsin(0.45 / crash_detect_distance) * 1.4  # 计算临界碰撞角度
+            crash_threshold = 2 * np.arcsin(0.45 / robot_12_dis) * 1.4  # 计算临界碰撞角度
 
             if abs(relative_speed_angle - robot_12_angle) < crash_threshold:  # 碰撞情况
                 crash_list.append([robot_1['id'], robot_2['id']])
@@ -126,8 +160,10 @@ def avoid_crash_v2(robot_list, crash_list):
         robot_0 = robot_list[crash[0]]
         robot_1 = robot_list[crash[1]]
         if robot_list[crash[0]]['rotate_state'] == robot_list[crash[1]]['rotate_state'] == 0:
-            sys.stdout.write('rotate %d %f\n' % (crash[0], 1))
-            sys.stdout.write('rotate %d %f\n' % (crash[1], 1))
+            # sys.stdout.write('rotate %d %f\n' % (crash[0], 1))
+            # sys.stdout.write('rotate %d %f\n' % (crash[1], 1))
+            robot_list[crash[0]]['rotate_state'] = robot_list[crash[0]]['face_angle'] + 1
+            robot_list[crash[1]]['rotate_state'] = robot_list[crash[1]]['face_angle'] + 1
             rotate_list[crash[0]] += 1
             rotate_list[crash[1]] += 1
         # 若一个直行一个转向
@@ -144,28 +180,33 @@ def avoid_crash_v2(robot_list, crash_list):
                     np.array([robot_list[crash[avoid_index]]['line_speed_x'],
                               robot_list[crash[avoid_index]]['line_speed_y']]))
                 # old_line_speed = robot_list[crash[avoid_index]]['forward_state']
-                sys.stdout.write('forward %d %f\n' % (crash[avoid_index], old_line_speed))
+                # sys.stdout.write('forward %d %f\n' % (crash[avoid_index], old_line_speed))
+                robot_list[crash[avoid_index]]['forward_state'] = old_line_speed
+                # robot_list[crash[avoid_index]]['rotate_state'] = -robot_list[crash[avoid_index]]['rotate_state']
                 slow_list[crash[avoid_index]] += 1
             else:  # 若转向机器人转向速度未到极限
-                sys.stdout.write('rotate %d %f\n' % (crash[avoid_index], 4.0 *
-                                                     np.abs(robot_list[crash[avoid_index]]['rotate_state']) /
-                                                     robot_list[crash[avoid_index]]['rotate_state']))
+                # sys.stdout.write('rotate %d %f\n' % (crash[avoid_index], 4.0 *
+                #                                      np.abs(robot_list[crash[avoid_index]]['rotate_state']) /
+                #                                      robot_list[crash[avoid_index]]['rotate_state']))
+                robot_list[crash[avoid_index]]['rotate_state'] = np.abs(
+                    robot_list[crash[avoid_index]]['rotate_state']) / robot_list[crash[avoid_index]]['rotate_state']
                 rotate_list[crash[avoid_index]] += 1
         # 若两个都转向
         else:
             # 计算两个机器人的避让次数，次数低的优先避让
-            if rotate_list[crash[0]] + slow_list[crash[0]] <= rotate_list[crash[1]] + slow_list[crash[1]]:
+            if rotate_list[crash[0]] + slow_list[crash[0]] <= rotate_list[crash[1]] + slow_list[crash[1]] and \
+                    robot_list[crash[0]]['forward_state'] != 0:  # 避让的那个机器人速度不能为0
                 avoid_index = 0
             else:
                 avoid_index = 1
             old_line_speed = np.linalg.norm(
                 np.array(
                     [robot_list[crash[avoid_index]]['line_speed_x'], robot_list[crash[avoid_index]]['line_speed_y']]))
-            # old_line_speed = robot_list[crash[avoid_index]]['forward_state']
-            sys.stdout.write('forward %d %f\n' % (crash[avoid_index], old_line_speed))
-            slow_list[crash[avoid_index]] += 1
+            old_line_speed = robot_list[crash[avoid_index]]['forward_state']
+            robot_list[crash[avoid_index]]['forward_state'] = old_line_speed
+            robot_list[crash[avoid_index]]['rotate_state'] = -robot_list[crash[avoid_index]]['rotate_state']
 
-        # old_line_speed = np.linalg.norm(np.array([robot_list[crash_id]['line_speed_x'], robot_list[crash_id]['line_speed_y']]))
-        # sys.stdout.write('forward %d %d\n' % (crash_id, math.ceil(old_line_speed)))
-        # sys.stdout.write('rotate %d %f\n' % (crash_id, 2))
-        # rotate_list[crash_id] += 1
+            # robot_list[crash[0]]['rotate_state'] = -robot_list[crash[0]]['rotate_state']
+            # robot_list[crash[1]]['rotate_state'] = -robot_list[crash[1]]['rotate_state']
+
+            rotate_list[crash[avoid_index]] += 1

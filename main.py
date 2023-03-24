@@ -108,7 +108,7 @@ if __name__ == '__main__':
                  'angle_speed': float(line[4]), 'line_speed_x': float(line[5]),
                  'line_speed_y': (float(line[6])), 'face_angle': float(line[7]),
                  'x': float(line[8]), 'y': float(line[9]),
-                 'destination': np.array([0, 0]), 'rotate_state': 0.0,
+                 'destination': np.array([0, 0]), 'rotate_state': 0.0, 'forward_state': 0.0,
                  'angle_speed_up': 100 / (math.pi * 20 * pow(0.45, 4)) if int(line[1]) == 0 else 100 / (
                          math.pi * 20 * pow(0.53, 4)),
                  'line_speed_up': 250 / (math.pi * 20 * pow(0.45, 2)) if int(line[1]) == 0 else 100 / (
@@ -169,9 +169,11 @@ if __name__ == '__main__':
                 line_speed, angle_speed = move_to_xy(robot, robot['destination'][0], robot['destination'][1],
                                                      robot_list)
                 robot['rotate_state'] = angle_speed
+                robot['forward_state'] = line_speed
 
-                sys.stdout.write('forward %d %d\n' % (robot['id'], line_speed))
-                sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
+
+                # sys.stdout.write('forward %d %d\n' % (robot['id'], line_speed))
+                # sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
                 # print("\n", file=sys.stderr)
 
             # 如果机器人手中有，则前往目标送货台
@@ -187,20 +189,25 @@ if __name__ == '__main__':
                 line_speed, angle_speed = move_to_xy(robot, robot['destination'][0], robot['destination'][1],
                                                      robot_list)
                 robot['rotate_state'] = angle_speed
+                robot['forward_state'] = line_speed
 
-                sys.stdout.write('forward %d %d\n' % (robot['id'], line_speed))
-                sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
+                # sys.stdout.write('forward %d %d\n' % (robot['id'], line_speed))
+                # sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
                 # print("\n", file=sys.stderr)
 
         # 碰撞检测
-        crash_list = crash_detect(robot_list, crash_detect_distance=2)
+        crash_list = crash_detect(robot_list, crash_detect_distance=4)
         if crash_list:
             avoid_crash_v2(robot_list, crash_list)
 
-        # line_speed, angle_speed = 3, 1.5
-        # for robot_id in range(4):
-        #     sys.stdout.write('forward %d %d\n' % (robot_id, line_speed))
-        #     sys.stdout.write('rotate %d %f\n' % (robot_id, angle_speed))
+        if 1070 <= frame_id <= 1096:
+            print(frame_id, file=sys.stderr)
+            print(crash_list, file=sys.stderr)
+            print(robot_list, file=sys.stderr)
+
+        for robot_id in range(4):
+            sys.stdout.write('forward %d %d\n' % (robot_id, robot_list[robot_id]['forward_state']))
+            sys.stdout.write('rotate %d %f\n' % (robot_id, robot_list[robot_id]['rotate_state']))
         finish()
 
         read_util_ok()

@@ -233,11 +233,3 @@ def strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id,
 
     return strategies_of_robots
 
-
-def strategy_greedy_2(work_bench_list, robot_list):
-    work_bench_state_list = []  # wbsl[i][j], 第i行表示类型i+1的工作台的集合
-    temp_list = []
-    for i in range(9):
-        pass
-
-    return 0
