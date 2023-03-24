@@ -7,32 +7,95 @@ def outer(arr1, arr2):  # 计算外积,用于判断转向的方向
     return arr1[0] * arr2[1] - arr1[1] * arr2[0]
 
 
-def avoid_wall(robot, robot_id, line_speed, angle_speed):
+def countPreVec(robot, work_bench_list, work_bench_id):
+    robot_xy = np.array([robot['x'], robot['y']])  # 机器人坐标
+    des_xy = np.array([work_bench_list[work_bench_id]['x'],
+                       work_bench_list[work_bench_id]['y']])  # 终点坐标
+    xy_robot_vec = des_xy - robot_xy  # xy-机器人坐标向量
+    xy_robot_vec_angle = math.atan2(xy_robot_vec[1], xy_robot_vec[0])  # xy-机器人向量朝向
+    pre_speed = np.array([math.cos(xy_robot_vec_angle) * 6, math.sin(xy_robot_vec_angle) * 6])
+    return pre_speed
+
+
+def avoid_wall(robot, line_speed, angle_speed, pre_speed):
     line_speed_new = line_speed
     angle_speed_new = angle_speed
-    if robot['carried_product_type']:
-        if (robot['x'] <= 0.5 and robot['y'] <= 0.5 and robot['face_angle'] >= -np.pi - 0.1 and robot[
-            'face_angle'] <= -np.pi / 2 + 0.1) \
-                or (robot['x'] <= 0.5 and robot['y'] >= 49.5 and robot['face_angle'] >= np.pi / 2 - 0.1 and robot[
-            'face_angle'] <= np.pi + 0.1) \
-                or (robot['x'] >= 49.5 and robot['y'] <= 0.5 and robot['face_angle'] >= -np.pi / 2 - 0.1 and robot[
-            'face_angle'] <= 0 + 0.1) \
-                or (robot['x'] >= 49.5 and robot['y'] >= 49.5 and robot['face_angle'] >= 0 - 0.1 and robot[
-            'face_angle'] <= np.pi / 2 + 0.1):
-            line_speed_new = 1
-            return line_speed_new, angle_speed_new
-        if robot['x'] <= 0.5 and (
-                robot['face_angle'] > -np.pi / 2 and robot['face_angle'] < 0 or robot['face_angle'] > np.pi / 2 and
-                robot['face_angle'] < np.pi) \
-                or robot['x'] >= 49.5 and robot['face_angle'] > -np.pi / 2 and robot['face_angle'] < np.pi / 2 \
-                or robot['y'] <= 0.5 and robot['face_angle'] > -np.pi and robot['face_angle'] < 0 \
-                or robot['y'] >= 49.5 and robot['face_angle'] > 0 and robot['face_angle'] < np.pi:
-            line_speed_new = 1.5
-            if robot['face_angle'] >= 0:
-                angle_speed_new = 2 + angle_speed
-            else:
-                angle_speed_new = -2 + angle_speed
-            return line_speed_new, angle_speed_new
+    # if robot['carried_product_type']:
+    #     if (robot['x'] <= 0.6 and robot['y'] <= 0.6 and robot['face_angle'] >= -np.pi - 0.1 and robot[
+    #         'face_angle'] <= -np.pi / 2 + 0.1) \
+    #             or (robot['x'] <= 0.6 and robot['y'] >= 49.4 and robot['face_angle'] >= np.pi / 2 - 0.1 and robot[
+    #         'face_angle'] <= np.pi + 0.1) \
+    #             or (robot['x'] >= 49.4 and robot['y'] <= 0.6 and robot['face_angle'] >= -np.pi / 2 - 0.1 and robot[
+    #         'face_angle'] <= 0 + 0.1) \
+    #             or (robot['x'] >= 49.4 and robot['y'] >= 49.4 and robot['face_angle'] >= 0 - 0.1 and robot[
+    #         'face_angle'] <= np.pi / 2 + 0.1):
+    #         line_speed_new = 0.2
+    #         angle_speed = (angle_speed/line_speed_new)*robot['carried_product_type']*2
+    #         return line_speed_new, angle_speed_new
+    angle_pre_speed = math.atan2(pre_speed[1], pre_speed[0])
+    if robot['x'] <= 0.7 and (
+            robot['face_angle'] > -np.pi and robot['face_angle'] < -np.pi / 2 or robot['face_angle'] > np.pi / 2 and
+            robot['face_angle'] < np.pi):
+        # angle_delta = min(abs(robot['face_angle']+np.pi/2), abs(np.pi/2-robot['face_angle']))
+
+        # if angle_delta == abs(robot['face_angle']+np.pi/2):
+        #     x = 1
+        # else:
+        #     x = -1
+        angle_delta = angle_pre_speed - robot['face_angle']
+        if angle_delta > 0:
+            x = -1
+        elif angle_delta < 0:
+            x = 1
+        else:
+            x = 0
+        angle_speed_new = (angle_delta / 0.01) * x * 2
+        line_speed_new = 0
+    if robot['x'] >= 49.3 and robot['face_angle'] > -np.pi / 2 and robot['face_angle'] < np.pi / 2:
+        # angle_delta = min(abs(robot['face_angle'] + np.pi / 2), abs(np.pi / 2 - robot['face_angle']))
+        # if angle_delta == abs(robot['face_angle'] + np.pi / 2):
+        #     x = -1
+        # else:
+        #     x = 1
+        angle_delta = angle_pre_speed - robot['face_angle']
+        if angle_delta > 0:
+            x = -1
+        elif angle_delta < 0:
+            x = 1
+        else:
+            x = 0
+        angle_speed_new = (angle_delta / 0.01) * x * 2
+        line_speed_new = 0
+    if robot['y'] <= 0.7 and robot['face_angle'] > -np.pi and robot['face_angle'] < 0:
+        # angle_delta = min(abs(robot['face_angle'] - np.pi), abs( robot['face_angle']))
+        # if angle_delta == abs(robot['face_angle'] - np.pi):
+        #     x = 1
+        # else:
+        #     x = -1
+        angle_delta = angle_pre_speed - robot['face_angle']
+        if angle_delta > 0:
+            x = -1
+        elif angle_delta < 0:
+            x = 1
+        else:
+            x = 0
+        angle_speed_new = (angle_delta / 0.01) * x * 2
+        line_speed_new = 0
+    if robot['y'] >= 49.3 and robot['face_angle'] > 0 and robot['face_angle'] < np.pi:
+        # angle_delta = min(abs(robot['face_angle'] + np.pi ), abs(robot['face_angle']))
+        # if angle_delta == abs(robot['face_angle'] + np.pi):
+        #     x = -1
+        # else:
+        #     x = 1
+        angle_delta = angle_pre_speed - robot['face_angle']
+        if angle_delta > 0:
+            x = -1
+        elif angle_delta < 0:
+            x = 1
+        else:
+            x = 0
+        angle_speed_new = (angle_delta / 0.01) * x * 2
+        line_speed_new = 0
     return line_speed_new, angle_speed_new
 
 
@@ -156,16 +219,36 @@ def avoid_crash_v2(robot_list, crash_list):
     slow_list = [0, 0, 0, 0]  # 机器人在防碰撞策略中的减速次数
 
     for crash in crash_list:
+
+        # 如果一个带货物一个不带货物，不带货物的要避让带货物的
+        if (robot_list[crash[0]]['carried_product_type'] == 0 or robot_list[crash[1]]['carried_product_type'] == 0) and \
+                robot_list[crash[0]]['carried_product_type'] != robot_list[crash[1]]['carried_product_type']:
+            avoid_index = 0 if robot_list[crash[0]]['carried_product_type'] == 0 else 1
+
+            # 1为执行避让的机器人，2为不避让的机器人
+            robot_1 = robot_list[avoid_index]
+            robot_2 = robot_list[avoid_index == 0]
+
+            # 机器人朝向向量
+            robot1_face_vec = np.array([np.cos(robot_1['face_angle']), np.sin(robot_1['face_angle'])])
+            robot2_face_vec = np.array([np.cos(robot_2['face_angle']), np.sin(robot_2['face_angle'])])
+
+            # 如果携带货物的机器人正在转向
+            if robot_2['rotate_state'] != 0:
+                robot_1['rotate_state'] = 4.0 * abs(robot_2['rotate_state']) / robot_2['rotate_state']
+            else:  # 如果携带货物的机器人正在直行
+                if outer(robot1_face_vec, robot2_face_vec) >= 0:
+                    robot_1['rotate_state'] = -4.0
+                else:
+                    robot_1['rotate_state'] = 4.0
+
         # 若两个机器人均为直行
-        robot_0 = robot_list[crash[0]]
-        robot_1 = robot_list[crash[1]]
         if robot_list[crash[0]]['rotate_state'] == robot_list[crash[1]]['rotate_state'] == 0:
-            # sys.stdout.write('rotate %d %f\n' % (crash[0], 1))
-            # sys.stdout.write('rotate %d %f\n' % (crash[1], 1))
             robot_list[crash[0]]['rotate_state'] = robot_list[crash[0]]['face_angle'] + 1
             robot_list[crash[1]]['rotate_state'] = robot_list[crash[1]]['face_angle'] + 1
             rotate_list[crash[0]] += 1
             rotate_list[crash[1]] += 1
+
         # 若一个直行一个转向
         elif robot_list[crash[0]]['rotate_state'] == 0.0 or robot_list[crash[1]]['rotate_state'] == 0.0:
             # 记录转向机器人在crash中的下标
@@ -191,6 +274,10 @@ def avoid_crash_v2(robot_list, crash_list):
                 robot_list[crash[avoid_index]]['rotate_state'] = np.abs(
                     robot_list[crash[avoid_index]]['rotate_state']) / robot_list[crash[avoid_index]]['rotate_state']
                 rotate_list[crash[avoid_index]] += 1
+
+            # if robot_list[crash[avoid_index]]['rotate_state'] != robot_list[crash[avoid_index]]['face_angle']:
+
+
         # 若两个都转向
         else:
             # 计算两个机器人的避让次数，次数低的优先避让

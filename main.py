@@ -5,8 +5,8 @@ import numpy as np
 import math
 from navigate import move_to_xy
 
-from avoidCrash import crash_detect
-from avoidCrash import avoid_crash_v2
+from avoidCrash import crash_detect, avoid_crash_v2
+from avoidCrash import countPreVec, avoid_wall
 
 from strategies import strategy_greedy, strategy_greedy_for_map_34, strategy_greedy_for_map_2
 
@@ -235,6 +235,8 @@ if __name__ == '__main__':
                 #                                      robot_list)
                 line_speed, angle_speed = move_to_xy(robot, robot['destination'][0], robot['destination'][1],
                                                      robot_list)
+                pre_speed = countPreVec(robot, work_bench_list, strategy['departure_work_bench_id'])
+                line_speed, angle_speed = avoid_wall(robot, line_speed, angle_speed, pre_speed)
                 robot['rotate_state'] = angle_speed
                 robot['forward_state'] = line_speed
 
@@ -255,6 +257,8 @@ if __name__ == '__main__':
                 #                                      robot_list)
                 line_speed, angle_speed = move_to_xy(robot, robot['destination'][0], robot['destination'][1],
                                                      robot_list)
+                pre_speed = countPreVec(robot, work_bench_list, strategy['destination_work_bench_id'])
+                line_speed, angle_speed = avoid_wall(robot, line_speed, angle_speed, pre_speed)
                 robot['rotate_state'] = angle_speed
                 robot['forward_state'] = line_speed
 
@@ -263,14 +267,14 @@ if __name__ == '__main__':
                 # print("\n", file=sys.stderr)
 
         # 碰撞检测
-        crash_list = crash_detect(robot_list, crash_detect_distance=4)
+        crash_list = crash_detect(robot_list, crash_detect_distance=2)
         if crash_list:
             avoid_crash_v2(robot_list, crash_list)
 
-        if 1070 <= frame_id <= 1096:
-            print(frame_id, file=sys.stderr)
-            print(crash_list, file=sys.stderr)
-            print(robot_list, file=sys.stderr)
+        # if 1213 <= frame_id <= 1230:
+        #     print(frame_id, file=sys.stderr)
+        #     print(crash_list, file=sys.stderr)
+        #     print(robot_list, file=sys.stderr)
 
         for robot_id in range(4):
             sys.stdout.write('forward %d %d\n' % (robot_id, robot_list[robot_id]['forward_state']))
