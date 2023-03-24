@@ -2,16 +2,8 @@ import numpy as np
 import math
 import sys
 
-<<<<<<< Updated upstream
-def normalized(x):  # 标准化
-    l = np.dot(x, x)
-    assert l > 0, (x, l)
-    return x / np.sqrt(l)
 
 
-=======
-
->>>>>>> Stashed changes
 def outer(arr1, arr2):  # 计算外积,用于判断转向的方向
     return arr1[0] * arr2[1] - arr1[1] * arr2[0]
 
@@ -44,15 +36,6 @@ def avoid_wall(robot, robot_id, line_speed, angle_speed):
             return line_speed_new, angle_speed_new
     return line_speed_new, angle_speed_new
 
-<<<<<<< Updated upstream
-
-# 检测碰撞函数，返回一个碰撞列表，表中元素表示会发生碰撞的机器人，如[[0, 1], [2, 3]]
-def crash_detect(robot_list, crash_detect_distance=4):
-    # 碰撞检测阈值，距离小于该值开始检测
-
-    crash_list = []  # 碰撞列表
-
-=======
 
 def avoid_crash(robot, other_robot_list, pre_speed, line_speed, angle_speed):
     d_min = 1.0
@@ -74,7 +57,6 @@ def crash_detect(robot_list, crash_detect_distance=4):
 
     crash_list = []  # 碰撞列表
 
->>>>>>> Stashed changes
     for i in range(len(robot_list)):  # 遍历整个机器人列表,robot为待检测
         for j in range(i + 1, len(robot_list)):
             robot_1 = robot_list[i]
@@ -103,8 +85,6 @@ def crash_detect(robot_list, crash_detect_distance=4):
     return crash_list
 
 
-<<<<<<< Updated upstream
-=======
 # 已经碰撞的检测
 def already_crash_detect(robot_list, crash_detect_distance=0.45 * 2):
     already_crash_list = []
@@ -136,20 +116,15 @@ def move_back(robot_list, already_crash_list):
         # sys.stdout.write('forward %d %f\n' % (crash_id, -0.5))
 
 
->>>>>>> Stashed changes
 # 检测到碰撞后的转向
 def avoid_crash_v2(robot_list, crash_list):
     rotate_list = [0, 0, 0, 0]  # 机器人在防碰撞策略中的转向次数
     slow_list = [0, 0, 0, 0]  # 机器人在防碰撞策略中的减速次数
 
     for crash in crash_list:
-<<<<<<< Updated upstream
-        #若两个机器人均为直行
-=======
         # 若两个机器人均为直行
         robot_0 = robot_list[crash[0]]
         robot_1 = robot_list[crash[1]]
->>>>>>> Stashed changes
         if robot_list[crash[0]]['rotate_state'] == robot_list[crash[1]]['rotate_state'] == 0:
             sys.stdout.write('rotate %d %f\n' % (crash[0], 1))
             sys.stdout.write('rotate %d %f\n' % (crash[1], 1))
@@ -190,11 +165,7 @@ def avoid_crash_v2(robot_list, crash_list):
             sys.stdout.write('forward %d %f\n' % (crash[avoid_index], old_line_speed))
             slow_list[crash[avoid_index]] += 1
 
-<<<<<<< Updated upstream
-
-=======
         # old_line_speed = np.linalg.norm(np.array([robot_list[crash_id]['line_speed_x'], robot_list[crash_id]['line_speed_y']]))
         # sys.stdout.write('forward %d %d\n' % (crash_id, math.ceil(old_line_speed)))
         # sys.stdout.write('rotate %d %f\n' % (crash_id, 2))
         # rotate_list[crash_id] += 1
->>>>>>> Stashed changes
