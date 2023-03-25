@@ -162,8 +162,10 @@ if __name__ == '__main__':
                 {'id': i, 'near_work_bench_id': int(line[0]), 'carried_product_type': int(line[1]),
                  'time_cost': float(line[2]),
                  'crash_cost': float(line[3]),
-                 'angle_speed': float(line[4]), 'line_speed_x': float(line[5]),
-                 'line_speed_y': (float(line[6])), 'face_angle': float(line[7]),
+                 'angle_speed': float(line[4]),
+                 'line_speed_x': float(line[5]), 'line_speed_y': (float(line[6])),
+                 'line_speed': math.sqrt(math.pow(float(line[5]), 2) + math.pow(float(line[6]), 2)),
+                 'face_angle': float(line[7]),
                  'x': float(line[8]), 'y': float(line[9]),
                  'destination': np.array([0, 0]), 'rotate_state': 0.0, 'forward_state': 0.0,
                  'angle_speed_up': 100 / (math.pi * 20 * pow(0.45, 4)) if int(line[1]) == 0 else 100 / (
@@ -267,11 +269,11 @@ if __name__ == '__main__':
                 # print("\n", file=sys.stderr)
 
         # 碰撞检测
-        crash_list = crash_detect(robot_list, crash_detect_distance=2)
+        crash_list = crash_detect(robot_list, crash_detect_distance=10)
         if crash_list:
-            avoid_crash_v2(robot_list, crash_list)
+            avoid_crash_v2(robot_list, crash_list, frame_id)
 
-        # if 1213 <= frame_id <= 1230:
+        # if 1215 <= frame_id <= 1220:
         #     print(frame_id, file=sys.stderr)
         #     print(crash_list, file=sys.stderr)
         #     print(robot_list, file=sys.stderr)
