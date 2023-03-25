@@ -8,7 +8,8 @@ from navigate import move_to_xy
 from avoidCrash import crash_detect, avoid_crash_v2
 from avoidCrash import countPreVec, avoid_wall
 
-from strategies import strategy_greedy, strategy_greedy_for_map_34, strategy_greedy_for_map_2
+from strategies import strategy_greedy_for_map_1, strategy_greedy_for_map_2, strategy_greedy_for_map_3, \
+    strategy_greedy_for_map_4
 
 
 def read_util_ok():
@@ -22,7 +23,6 @@ def finish():
 
 
 if __name__ == '__main__':
-    # time.sleep(10)
     read_util_ok()  # 初始化完成
     finish()  # 初始化完成输出一个OK
 
@@ -42,7 +42,6 @@ if __name__ == '__main__':
         # 工作台数量
         num_of_work_bench = int(line[0])
 
-        # print("帧数:" + str(frame_id) + "; 得分:" + str(parts[1]) + "工作台数量：" + str(num_of_work_bench), file=sys.stderr)
         # 下面K行为工作站信息
         work_bench_list = []
         work_bench_list_by_type = [[], [], [], [], [], [], [], [], []]
@@ -50,11 +49,11 @@ if __name__ == '__main__':
         # 格式为{num_of_this_type,num_of_products,num_of_producing,num_of_material_type_x}
         work_bench_statistics_by_type = {
             '4': {'num_of_this_type': 0, 'num_of_products': 0, 'num_of_producing': 0, 'num_of_material_type_1': 0,
-                  'num_of_material_type_2': 0},
+                  'num_of_material_type_2': 0, 'total_of_material_type_1': 0, 'total_of_material_type_2': 0},
             '5': {'num_of_this_type': 0, 'num_of_products': 0, 'num_of_producing': 0, 'num_of_material_type_1': 0,
-                  'num_of_material_type_3': 0},
+                  'num_of_material_type_3': 0, 'total_of_material_type_1': 0, 'total_of_material_type_3': 0},
             '6': {'num_of_this_type': 0, 'num_of_products': 0, 'num_of_producing': 0, 'num_of_material_type_2': 0,
-                  'num_of_material_type_3': 0},
+                  'num_of_material_type_3': 0, 'total_of_material_type_2': 0, 'total_of_material_type_3': 0},
             '7': {'num_of_this_type': 0, 'num_of_products': 0, 'num_of_producing': 0, 'num_of_material_type_4': 0,
                   'num_of_material_type_5': 0, 'num_of_material_type_6': 0}
         }
@@ -70,59 +69,102 @@ if __name__ == '__main__':
                           'material_state': int(line[4]),
                           'product_state': int(line[5])}
             work_bench_list.append(work_bench)
-            if frame_id == 1:
-                work_bench_list_by_type[work_bench_list[i]['type'] - 1].append(work_bench_list[i])
-            # 针对图1的策略
-            if num_of_work_bench == 43:
-                if work_bench['type'] == 4:
-                    work_bench_statistics_by_type['4']['num_of_this_type'] += 1
-                    if work_bench['product_state'] == 1:
-                        work_bench_statistics_by_type['4']['num_of_products'] += 1
-                    if work_bench['produce_remain_time'] >= 0:
-                        work_bench_statistics_by_type['4']['num_of_producing'] += 1
-                    if work_bench['material_state'] & 2:
-                        work_bench_statistics_by_type['4']['num_of_material_type_1'] += 1
-                    if work_bench['material_state'] & 4:
-                        work_bench_statistics_by_type['4']['num_of_material_type_2'] += 1
-                elif work_bench['type'] == 5:
-                    work_bench_statistics_by_type['5']['num_of_this_type'] += 1
-                    if work_bench['product_state'] == 1:
-                        work_bench_statistics_by_type['5']['num_of_products'] += 1
-                    if work_bench['produce_remain_time'] >= 0:
-                        work_bench_statistics_by_type['5']['num_of_producing'] += 1
-                    if work_bench['material_state'] & 2:
-                        work_bench_statistics_by_type['5']['num_of_material_type_1'] += 1
-                    if work_bench['material_state'] & 8:
-                        work_bench_statistics_by_type['5']['num_of_material_type_3'] += 1
-                elif work_bench['type'] == 6:
-                    work_bench_statistics_by_type['6']['num_of_this_type'] += 1
-                    if work_bench['product_state'] == 1:
-                        work_bench_statistics_by_type['6']['num_of_products'] += 1
-                    if work_bench['produce_remain_time'] >= 0:
-                        work_bench_statistics_by_type['6']['num_of_producing'] += 1
-                    if work_bench['material_state'] & 4:
-                        work_bench_statistics_by_type['6']['num_of_material_type_2'] += 1
-                    if work_bench['material_state'] & 8:
-                        work_bench_statistics_by_type['6']['num_of_material_type_3'] += 1
-                elif work_bench['type'] == 7:
-                    work_bench_statistics_by_type['7']['num_of_this_type'] += 1
-                    if work_bench['product_state'] == 1:
-                        work_bench_statistics_by_type['7']['num_of_products'] += 1
-                    if work_bench['produce_remain_time'] >= 0:
-                        work_bench_statistics_by_type['7']['num_of_producing'] += 1
-                    if work_bench['material_state'] & 16:
-                        work_bench_statistics_by_type['7']['num_of_material_type_4'] += 1
-                    if work_bench['material_state'] & 32:
-                        work_bench_statistics_by_type['7']['num_of_material_type_5'] += 1
-                    if work_bench['material_state'] & 64:
-                        work_bench_statistics_by_type['7']['num_of_material_type_6'] += 1
+
+            work_bench_list_by_type[work_bench_list[i]['type'] - 1].append(work_bench_list[i])
+
+            if work_bench['type'] == 4:
+                work_bench_statistics_by_type['4']['num_of_this_type'] += 1
+                if work_bench['product_state'] == 1:
+                    work_bench_statistics_by_type['4']['num_of_products'] += 1
+                if work_bench['produce_remain_time'] >= 0:
+                    work_bench_statistics_by_type['4']['num_of_producing'] += 1
+                if work_bench['material_state'] & 2:
+                    work_bench_statistics_by_type['4']['num_of_material_type_1'] += 1
+                if work_bench['material_state'] & 4:
+                    work_bench_statistics_by_type['4']['num_of_material_type_2'] += 1
+
+            elif work_bench['type'] == 5:
+                work_bench_statistics_by_type['5']['num_of_this_type'] += 1
+                if work_bench['product_state'] == 1:
+                    work_bench_statistics_by_type['5']['num_of_products'] += 1
+                if work_bench['produce_remain_time'] >= 0:
+                    work_bench_statistics_by_type['5']['num_of_producing'] += 1
+                if work_bench['material_state'] & 2:
+                    work_bench_statistics_by_type['5']['num_of_material_type_1'] += 1
+                if work_bench['material_state'] & 8:
+                    work_bench_statistics_by_type['5']['num_of_material_type_3'] += 1
+            elif work_bench['type'] == 6:
+                work_bench_statistics_by_type['6']['num_of_this_type'] += 1
+                if work_bench['product_state'] == 1:
+                    work_bench_statistics_by_type['6']['num_of_products'] += 1
+                if work_bench['produce_remain_time'] >= 0:
+                    work_bench_statistics_by_type['6']['num_of_producing'] += 1
+                if work_bench['material_state'] & 4:
+                    work_bench_statistics_by_type['6']['num_of_material_type_2'] += 1
+                if work_bench['material_state'] & 8:
+                    work_bench_statistics_by_type['6']['num_of_material_type_3'] += 1
+            elif work_bench['type'] == 7:
+                work_bench_statistics_by_type['7']['num_of_this_type'] += 1
+                if work_bench['product_state'] == 1:
+                    work_bench_statistics_by_type['7']['num_of_products'] += 1
+                if work_bench['produce_remain_time'] >= 0:
+                    work_bench_statistics_by_type['7']['num_of_producing'] += 1
+                if work_bench['material_state'] & 16:
+                    work_bench_statistics_by_type['7']['num_of_material_type_4'] += 1
+                    work_bench_statistics_by_type['4']['num_of_products'] += 1
+                if work_bench['material_state'] & 32:
+                    work_bench_statistics_by_type['7']['num_of_material_type_5'] += 1
+                    work_bench_statistics_by_type['5']['num_of_products'] += 1
+                if work_bench['material_state'] & 64:
+                    work_bench_statistics_by_type['7']['num_of_material_type_6'] += 1
+                    work_bench_statistics_by_type['6']['num_of_products'] += 1
+        work_bench_statistics_by_type['4']['total_of_material_type_1'] = work_bench_statistics_by_type['4'][
+                                                                             'num_of_material_type_1'] + \
+                                                                         work_bench_statistics_by_type['4'][
+                                                                             'num_of_products'] + \
+                                                                         work_bench_statistics_by_type['4'][
+                                                                             'num_of_producing']
+        work_bench_statistics_by_type['4']['total_of_material_type_2'] = work_bench_statistics_by_type['4'][
+                                                                             'num_of_material_type_2'] + \
+                                                                         work_bench_statistics_by_type['4'][
+                                                                             'num_of_products'] + \
+                                                                         work_bench_statistics_by_type['4'][
+                                                                             'num_of_producing']
+
+        work_bench_statistics_by_type['5']['total_of_material_type_1'] = work_bench_statistics_by_type['5'][
+                                                                             'num_of_material_type_1'] + \
+                                                                         work_bench_statistics_by_type['5'][
+                                                                             'num_of_products'] + \
+                                                                         work_bench_statistics_by_type['5'][
+                                                                             'num_of_producing']
+        work_bench_statistics_by_type['5']['total_of_material_type_3'] = work_bench_statistics_by_type['5'][
+                                                                             'num_of_material_type_3'] + \
+                                                                         work_bench_statistics_by_type['5'][
+                                                                             'num_of_products'] + \
+                                                                         work_bench_statistics_by_type['5'][
+                                                                             'num_of_producing']
+
+        work_bench_statistics_by_type['6']['total_of_material_type_2'] = work_bench_statistics_by_type['6'][
+                                                                             'num_of_material_type_2'] + \
+                                                                         work_bench_statistics_by_type['6'][
+                                                                             'num_of_products'] + \
+                                                                         work_bench_statistics_by_type['6'][
+                                                                             'num_of_producing']
+        work_bench_statistics_by_type['6']['total_of_material_type_3'] = work_bench_statistics_by_type['6'][
+                                                                             'num_of_material_type_3'] + \
+                                                                         work_bench_statistics_by_type['6'][
+                                                                             'num_of_products'] + \
+                                                                         work_bench_statistics_by_type['6'][
+                                                                             'num_of_producing']
         # 只需要在第一帧的时候记录nearest_sell_place就行
         if frame_id == 1:
             for work_bench in work_bench_list:
                 if work_bench['type'] == 4:
                     work_bench_xy = np.array([work_bench['x'], work_bench['y']])
                     nearest_sell_place[work_bench['id']] = {'id': -1, 'distance': 9999}
-                    for other_work_bench in work_bench_list_by_type[5]:
+                    # 类型4工作台产物可以卖到类型7，8，9
+                    for other_work_bench in work_bench_list_by_type[6] + work_bench_list_by_type[7] + \
+                                            work_bench_list_by_type[8]:
                         other_work_bench_xy = np.array([other_work_bench['x'], other_work_bench['y']])
                         distance = np.linalg.norm(work_bench_xy - other_work_bench_xy)
                         if distance < nearest_sell_place[work_bench['id']]['distance']:
@@ -130,7 +172,9 @@ if __name__ == '__main__':
                 if work_bench['type'] == 5:
                     work_bench_xy = np.array([work_bench['x'], work_bench['y']])
                     nearest_sell_place[work_bench['id']] = {'id': -1, 'distance': 9999}
-                    for other_work_bench in work_bench_list_by_type[6]:
+                    # 类型5工作台产物可以卖到类型7，8，9
+                    for other_work_bench in work_bench_list_by_type[6] + work_bench_list_by_type[7] + \
+                                            work_bench_list_by_type[8]:
                         other_work_bench_xy = np.array([other_work_bench['x'], other_work_bench['y']])
                         distance = np.linalg.norm(work_bench_xy - other_work_bench_xy)
                         if distance < nearest_sell_place[work_bench['id']]['distance']:
@@ -138,7 +182,9 @@ if __name__ == '__main__':
                 if work_bench['type'] == 6:
                     work_bench_xy = np.array([work_bench['x'], work_bench['y']])
                     nearest_sell_place[work_bench['id']] = {'id': -1, 'distance': 9999}
-                    for other_work_bench in work_bench_list_by_type[7]:
+                    # 类型6工作台产物可以卖到类型7，8，9
+                    for other_work_bench in work_bench_list_by_type[6] + work_bench_list_by_type[7] + \
+                                            work_bench_list_by_type[8]:
                         other_work_bench_xy = np.array([other_work_bench['x'], other_work_bench['y']])
                         distance = np.linalg.norm(work_bench_xy - other_work_bench_xy)
                         if distance < nearest_sell_place[work_bench['id']]['distance']:
@@ -146,7 +192,8 @@ if __name__ == '__main__':
                 if work_bench['type'] == 7:
                     work_bench_xy = np.array([work_bench['x'], work_bench['y']])
                     nearest_sell_place[work_bench['id']] = {'id': -1, 'distance': 9999}
-                    for other_work_bench in work_bench_list_by_type[8]:
+                    # 类型7工作台产物可以卖到类型8，9
+                    for other_work_bench in work_bench_list_by_type[7] + work_bench_list_by_type[8]:
                         other_work_bench_xy = np.array([other_work_bench['x'], other_work_bench['y']])
                         distance = np.linalg.norm(work_bench_xy - other_work_bench_xy)
                         if distance < nearest_sell_place[work_bench['id']]['distance']:
@@ -168,29 +215,34 @@ if __name__ == '__main__':
                  'face_angle': float(line[7]),
                  'x': float(line[8]), 'y': float(line[9]),
                  'destination': np.array([0, 0]), 'rotate_state': 0.0, 'forward_state': 0.0,
-                 'angle_speed_up': 100 / (math.pi * 20 * pow(0.45, 4)) if int(line[1]) == 0 else 100 / (
-                         math.pi * 20 * pow(0.53, 4)),
-                 'line_speed_up': 250 / (math.pi * 20 * pow(0.45, 2)) if int(line[1]) == 0 else 100 / (
-                         math.pi * 20 * pow(0.53, 4))},
+                 }
             )
 
         sys.stdout.write('%d\n' % frame_id)
 
+        slow_down_distance = 2.0
         if num_of_work_bench == 43:
-            strategies_of_robots = strategy_greedy(work_bench_list, robot_list, strategies_of_robots, frame_id,
-                                                   nearest_sell_place, work_bench_statistics_by_type)
+            strategies_of_robots = strategy_greedy_for_map_1(work_bench_list, robot_list, strategies_of_robots,
+                                                             frame_id, work_bench_statistics_by_type,
+                                                             work_bench_list_by_type)
+            slow_down_distance = 2.4  # 2.4 63.5
         if num_of_work_bench == 25:
             strategies_of_robots = strategy_greedy_for_map_2(work_bench_list, robot_list, strategies_of_robots,
                                                              frame_id,
                                                              nearest_sell_place)
-
-        else:
-            strategies_of_robots = strategy_greedy_for_map_34(work_bench_list, robot_list, strategies_of_robots,
-                                                              frame_id,
-                                                              nearest_sell_place)
+            slow_down_distance = 1.7  # 1.7 rank=12 71.6w  对6的激励=2.3
+        if num_of_work_bench == 50:
+            strategies_of_robots = strategy_greedy_for_map_3(work_bench_list, robot_list, strategies_of_robots,
+                                                             frame_id,
+                                                             nearest_sell_place)
+            slow_down_distance = 2.0  # 2.0,87.5w  这个参数图3跳帧能跑90万
+        if num_of_work_bench == 18:
+            strategies_of_robots = strategy_greedy_for_map_4(work_bench_list, robot_list, strategies_of_robots,
+                                                             frame_id,
+                                                             nearest_sell_place)
+            slow_down_distance = 1.87  # 1.87,60.5w  rank =6  对4的激励是1.1
 
         # 看看每个机器人能不能购买或售出物品
-        # print("此处为调试购买或售出物品判断：", file=sys.stderr)
         for robot in robot_list:
             strategy = strategies_of_robots[robot['id']]
             # print("机器人" + str(robot['id']) + ":" + str(robot), file=sys.stderr)
@@ -219,7 +271,6 @@ if __name__ == '__main__':
                     strategies_of_robots[robot['id']] = {}
 
         # 为每个机器人输出操作
-        # print("此处为机器人决策信息：", file=sys.stderr)
         for robot in robot_list:
             strategy = strategies_of_robots[robot['id']]
             if not strategy:
@@ -227,46 +278,25 @@ if __name__ == '__main__':
 
             # 如果机器人手中无货，则前往目标取货台
             if robot['carried_product_type'] == 0:
-                # print("机器人" + str(robot['id']) + ":" + str(robot), file=sys.stderr)
-                # print("策略：" + str(strategy), file=sys.stderr)
-                # print("目标工作台:" + str(work_bench_list[strategy[0]]), file=sys.stderr)
                 robot['destination'] = np.array([work_bench_list[strategy['departure_work_bench_id']]['x'],
                                                  work_bench_list[strategy['departure_work_bench_id']]['y']])
-                # line_speed, angle_speed = move_to_xy(robot, work_bench_list[strategy['departure_work_bench_id']]['x'],
-                #                                      work_bench_list[strategy['departure_work_bench_id']]['y'],
-                #                                      robot_list)
                 line_speed, angle_speed = move_to_xy(robot, robot['destination'][0], robot['destination'][1],
-                                                     robot_list)
+                                                     robot_list, slow_down_distance)
                 pre_speed = countPreVec(robot, work_bench_list, strategy['departure_work_bench_id'])
                 line_speed, angle_speed = avoid_wall(robot, line_speed, angle_speed, pre_speed)
                 robot['rotate_state'] = angle_speed
                 robot['forward_state'] = line_speed
 
-
-                # sys.stdout.write('forward %d %d\n' % (robot['id'], line_speed))
-                # sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
-                # print("\n", file=sys.stderr)
-
-            # 如果机器人手中有，则前往目标送货台
+            # 如果机器人手中有货，则前往目标送货台
             if robot['carried_product_type'] != 0:
-                # print("机器人" + str(robot['id']) + ":" + str(robot), file=sys.stderr)
-                # print("策略：" + str(strategy), file=sys.stderr)
-                # print("目标工作台:" + str(work_bench_list[strategy[1]]), file=sys.stderr)
                 robot['destination'] = np.array([work_bench_list[strategy['destination_work_bench_id']]['x'],
                                                  work_bench_list[strategy['destination_work_bench_id']]['y']])
-                # line_speed, angle_speed = move_to_xy(robot, work_bench_list[strategy['destination_work_bench_id']]['x'],
-                #                                      work_bench_list[strategy['destination_work_bench_id']]['y'],
-                #                                      robot_list)
                 line_speed, angle_speed = move_to_xy(robot, robot['destination'][0], robot['destination'][1],
-                                                     robot_list)
+                                                     robot_list, slow_down_distance)
                 pre_speed = countPreVec(robot, work_bench_list, strategy['destination_work_bench_id'])
                 line_speed, angle_speed = avoid_wall(robot, line_speed, angle_speed, pre_speed)
                 robot['rotate_state'] = angle_speed
                 robot['forward_state'] = line_speed
-
-                # sys.stdout.write('forward %d %d\n' % (robot['id'], line_speed))
-                # sys.stdout.write('rotate %d %f\n' % (robot['id'], angle_speed))
-                # print("\n", file=sys.stderr)
 
         # 碰撞检测
         crash_list = crash_detect(robot_list, crash_detect_distance=10)

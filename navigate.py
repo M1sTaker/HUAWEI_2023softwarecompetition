@@ -6,7 +6,7 @@ def outer(arr1, arr2):  # 计算外积,用于判断转向的方向
     return arr1[0] * arr2[1] - arr1[1] * arr2[0]
 
 
-def move_to_xy(robot, des_x, des_y, robot_list):
+def move_to_xy(robot, des_x, des_y, robot_list, slow_down_distance=2.0):
     robot_face_angle = robot['face_angle']  # 机器人朝向
     robot_face_vec = np.array([np.cos(robot_face_angle), np.sin(robot_face_angle)])  # 机器人朝向向量
 
@@ -32,9 +32,9 @@ def move_to_xy(robot, des_x, des_y, robot_list):
                 #         other_robot['face_angle'] - robot['face_angle']) < math.pi/6 *1.0 ) and np.linalg.norm(
                 #     robot_xy - other_robot_xy) < 1:
                 if (abs(other_robot['face_angle'] - robot['face_angle']) > (math.pi - math.pi / 6) or abs(
-                        other_robot['face_angle'] - robot['face_angle']) < math.pi / 6 ):
-                # if (np.arcsin(outer(robot_speed, other_robot_speed) / (np.linalg.norm(robot_speed) * np.linalg.norm(other_robot_speed)) < np.pi / 6)) and np.linalg.norm( \
-                #     robot_xy - other_robot_xy) < 1:
+                        other_robot['face_angle'] - robot['face_angle']) < math.pi / 6):
+                    # if (np.arcsin(outer(robot_speed, other_robot_speed) / (np.linalg.norm(robot_speed) * np.linalg.norm(other_robot_speed)) < np.pi / 6)) and np.linalg.norm( \
+                    #     robot_xy - other_robot_xy) < 1:
                     return 6, 1
             return 6.0, 0
         line_speed = 6.0
@@ -49,6 +49,6 @@ def move_to_xy(robot, des_x, des_y, robot_list):
         else:  # 机器人向左转(逆时针)
             angle_speed = 4.0
 
-    if (distance < 2.0):  # 快到终点时减速
+    if (distance < slow_down_distance):  # 快到终点时减速
         line_speed = 2.0
     return line_speed, angle_speed
