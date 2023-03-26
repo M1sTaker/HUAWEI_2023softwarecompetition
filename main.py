@@ -260,9 +260,10 @@ if __name__ == '__main__':
         # 如果是图4
         if num_of_work_bench == 18:
             map = 4
+            stimulate_factor_for_product_4 = 1.4  # 这个数字需要大于1，越大越积极生产物品4
             strategies_of_robots = strategy_greedy_for_map_4(work_bench_list, robot_list, strategies_of_robots,
                                                              frame_id,
-                                                             nearest_sell_place)
+                                                             nearest_sell_place, stimulate_factor_for_product_4)
             # slow_down_distance = 1.87,crash_detect_distance = 10, rank =6  对4的激励是1.1,60.5w
             slow_down_distance = 1.87
             crash_detect_distance = 10

@@ -771,7 +771,8 @@ def strategy_greedy_for_map_3(work_bench_list, robot_list, strategies_of_robots,
     return strategies_of_robots
 
 
-def strategy_greedy_for_map_4(work_bench_list, robot_list, strategies_of_robots, frame_id, nearest_sell_place):
+def strategy_greedy_for_map_4(work_bench_list, robot_list, strategies_of_robots, frame_id, nearest_sell_place,
+                              stimulate_factor_for_product_4):
     top_N = 30
 
     # 候选购买材料目的地,格式为{工作台id(work_bench_id)，生产的物品类型(product_type)，剩余生产时间(produce_remain_time)}
@@ -859,31 +860,32 @@ def strategy_greedy_for_map_4(work_bench_list, robot_list, strategies_of_robots,
                 profit = product_profits[departure['product_type'] - 1]
                 potential_profit = 0
                 distance_for_potential_profit = 0
-                # # 只有目标送货工作台产品格没有物品且不在生产中才能获得潜在收益
+                # 只有目标送货工作台产品格没有物品且没有被阻塞
                 if work_bench_list[destination['work_bench_id']]['type'] == 4 and \
                         nearest_sell_place[destination['work_bench_id']]['id'] != -1 and \
-                        work_bench_list[destination['work_bench_id']]['produce_remain_time'] != -1:
+                        work_bench_list[destination['work_bench_id']]['produce_remain_time'] != 0:
                     potential_profit = product_profits[
-                                           work_bench_list[destination['work_bench_id']]['type'] - 1] / 2 * 1.1
+                                           work_bench_list[destination['work_bench_id']][
+                                               'type'] - 1] / 2 * stimulate_factor_for_product_4
                     distance_for_potential_profit = nearest_sell_place[destination['work_bench_id']]['distance']
 
                 if work_bench_list[destination['work_bench_id']]['type'] == 5 and \
                         nearest_sell_place[destination['work_bench_id']]['id'] != -1 and \
-                        work_bench_list[destination['work_bench_id']]['produce_remain_time'] != -1:
+                        work_bench_list[destination['work_bench_id']]['produce_remain_time'] != 0:
                     potential_profit = product_profits[
                                            work_bench_list[destination['work_bench_id']]['type'] - 1] / 2
                     distance_for_potential_profit = nearest_sell_place[destination['work_bench_id']]['distance']
 
                 if work_bench_list[destination['work_bench_id']]['type'] == 6 and \
                         nearest_sell_place[destination['work_bench_id']]['id'] != -1 and \
-                        work_bench_list[destination['work_bench_id']]['produce_remain_time'] != -1:
+                        work_bench_list[destination['work_bench_id']]['produce_remain_time'] != 0:
                     potential_profit = product_profits[
                                            work_bench_list[destination['work_bench_id']]['type'] - 1] / 2
                     distance_for_potential_profit = nearest_sell_place[destination['work_bench_id']]['distance']
 
                 if work_bench_list[destination['work_bench_id']]['type'] == 7 and \
                         nearest_sell_place[destination['work_bench_id']]['id'] != -1 and \
-                        work_bench_list[destination['work_bench_id']]['produce_remain_time'] != -1:
+                        work_bench_list[destination['work_bench_id']]['produce_remain_time'] != 0:
                     potential_profit = product_profits[
                                            work_bench_list[destination['work_bench_id']]['type'] - 1] / 3
                     distance_for_potential_profit = nearest_sell_place[destination['work_bench_id']]['distance']
