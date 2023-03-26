@@ -2,6 +2,8 @@ import sys
 
 import numpy as np
 
+binary = lambda n: "" if n == 0 else binary(n // 2) + str(n % 2)
+
 # 各种物品的购入价格
 product_buy_prices = [3000, 4400, 5800, 15400, 17200, 19200, 76000]
 # 各种物品的售出价格
@@ -938,6 +940,287 @@ def strategy_greedy_for_map_4(work_bench_list, robot_list, strategies_of_robots,
             profit_per_meter = (strategy['profit'] + strategy['potential_profit']) / (
                     distance_from_robot_to_departure + distance_from_departure_to_destination + strategy[
                 'distance_for_potential_profit'])
+
+            # 插入排序，寻找插入点
+            insert_index = len(top_n_strategies_for_this_robot)
+            for top_50_strategy in top_n_strategies_for_this_robot:
+                if top_50_strategy['profit_per_meter'] <= profit_per_meter:
+                    insert_index = top_n_strategies_for_this_robot.index(top_50_strategy)
+                    break
+            if insert_index <= top_N - 1:
+                top_n_strategies_for_this_robot.insert(insert_index,
+                                                       {'departure_work_bench_id': strategy['departure_work_bench_id'],
+                                                        'destination_work_bench_id': strategy[
+                                                            'destination_work_bench_id'],
+                                                        'product_type': strategy['product_type'],
+                                                        'profit_per_meter': profit_per_meter})
+
+        top_n_strategies_for_robots.append(top_n_strategies_for_this_robot)
+
+    for robot in robot_list:  # 为每一个机器人寻找方案
+        if strategies_of_robots[robot['id']] != {}:
+            continue
+        for strategy in top_n_strategies_for_robots[robot['id']]:  # 遍历该机器人的待选方案
+            rank = top_n_strategies_for_robots[robot['id']].index(strategy) + 1  # 这是平均每米收益第rank大的方案
+            flag = False  # 该方案与其他机器人已选方案是否冲突
+            for selected_strategy in strategies_of_robots:  # 判断该待选方案是否和其他机器人已选择方案有冲突
+                if selected_strategy == {}:
+                    continue
+                if (selected_strategy['departure_work_bench_id'] == strategy['departure_work_bench_id'] and
+                    selected_strategy['product_type'] == strategy['product_type'] and selected_strategy[
+                        'carried_product_type'] == 0) or (
+                        selected_strategy['product_type'] == strategy['product_type'] and
+                        selected_strategy['destination_work_bench_id'] == strategy['destination_work_bench_id']):
+                    flag = True
+                    break
+            if not flag:
+                if strategies_of_robots[robot['id']] == {}:
+                    strategies_of_robots[robot['id']] = strategy
+                    strategies_of_robots[robot['id']]['carried_product_type'] = 0
+                elif work_bench_list[strategy['destination_work_bench_id']]['material_state'] > 0:
+                    strategies_of_robots[robot['id']] = strategy
+                    strategies_of_robots[robot['id']]['carried_product_type'] = 0
+
+                # 如果平均每米收益最大方案不会去已经有部分原材料的工作台送货，最多向后搜索到第3收益最大的方案
+                if rank >= 6 or work_bench_list[strategy['destination_work_bench_id']]['material_state'] > 0:
+                    break
+
+    return strategies_of_robots
+
+
+# 对生产4进行奖励，对生产4,5,6个数方差进行惩罚，对生产4,5,6的最大个数进行奖励，对生产7的进行奖励（与时间负相关）
+
+def reword_strategy_map4(balance_list, work_bench_list, strategy, frame_id):
+    reword = 0
+    reword_type7 = 0
+    if work_bench_list[strategy['destination_work_bench_id']]['type'] == 4 and (
+            0 in balance_list) and balance_list.index(0) == 0 and binary(
+        (pow(2, (work_bench_list[strategy['destination_work_bench_id']]['type']))) | (
+                work_bench_list[12]['material_state'])).count('1') - binary(
+        work_bench_list[12]['material_state']).count(
+        '1') > 0:
+        # print(binary((pow(2, (work_bench_list[strategy['destination_work_bench_id']]['type']))) | (
+        # work_bench_list[12]['material_state'])).count('1'), file=sys.stderr)
+        reword = 60  # 706323
+
+    if work_bench_list[strategy['destination_work_bench_id']]['type'] == 4 and 2 ** (
+            work_bench_list[strategy['departure_work_bench_id']]['type']) | \
+            work_bench_list[strategy['destination_work_bench_id']]['material_state'] == 6:
+        balance_list[0] += 1
+    if work_bench_list[strategy['destination_work_bench_id']]['type'] == 5 and 2 ** (
+            work_bench_list[strategy['departure_work_bench_id']]['type']) | \
+            work_bench_list[strategy['destination_work_bench_id']]['material_state'] == 10:
+        balance_list[1] += 1
+    if work_bench_list[strategy['destination_work_bench_id']]['type'] == 6 and 2 ** (
+            work_bench_list[strategy['departure_work_bench_id']]['type']) | \
+            work_bench_list[strategy['destination_work_bench_id']]['material_state'] == 12:
+        balance_list[2] += 1
+    if work_bench_list[strategy['destination_work_bench_id']]['type'] == 7 and 2 ** (
+            work_bench_list[strategy['departure_work_bench_id']]['type']) | \
+            work_bench_list[strategy['destination_work_bench_id']]['material_state'] == 112:
+        reword_type7 = 0.2 * 20000 / frame_id
+    # if strategy['destination_work_bench_id'] == 7 and 2 ** (
+    # work_bench_list[strategy['departure_work_bench_id']]['type']) | \
+    #         work_bench_list[strategy['destination_work_bench_id']]['material_state'] == 112:
+    #     balance_list_type7[0] += 1
+    # if strategy['destination_work_bench_id'] == 21 and 2 ** (
+    # work_bench_list[strategy['departure_work_bench_id']]['type']) | \
+    #         work_bench_list[strategy['destination_work_bench_id']]['material_state'] == 112:
+    #     balance_list_type7[1] += 1
+
+    # reword_balance = -20*(max(balance_list)-min(balance_list))
+    reword_balance = -(
+            (balance_list[0] - sum(balance_list) / 3) ** 2 + (balance_list[1] - sum(balance_list) / 3) ** 2 + (
+            balance_list[2] - sum(balance_list) / 3) ** 2)
+    # - 20 * ((balance_list_type7[0] - sum(balance_list_type7) / 2) ** 2 + (
+    # balance_list_type7[1] - sum(balance_list_type7) / 2) ** 2)
+    reword_greedy = max(balance_list)
+    return reword + reword_balance + reword_greedy + reword_type7
+
+def strategy_greedy_for_map_4_v2(work_bench_list, robot_list, strategies_of_robots, frame_id, nearest_sell_place):
+    top_N = 30
+
+    # 候选购买材料目的地,格式为{工作台id(work_bench_id)，生产的物品类型(product_type)，剩余生产时间(produce_remain_time)}
+    candidate_buy_destinations = []
+
+    # 候选销售产品目的地,格式为{工作台id（work_bench_id），需要的物品类型(material_requested)}
+    candidate_sell_destinations = []
+    # 当前工作台已生产的产品4、产品5和产品6的个数列表balance_list[num1,num2,num3]
+    num1 = 0
+    num2 = 0
+    num3 = 0
+    num11 = 0
+    num22 = 0
+    for work_bench in work_bench_list:
+        if work_bench['type'] == 4 and work_bench['product_state'] == 1:
+            num1 += 1
+        if work_bench['type'] == 5 and work_bench['product_state'] == 1:
+            num2 += 1
+        if work_bench['type'] == 6 and work_bench['product_state'] == 1:
+            num3 += 1
+        if work_bench['id'] == 7 and work_bench['product_state'] == 1:
+            num11 += 1
+        if work_bench['id'] == 21 and work_bench['product_state'] == 1:
+            num22 += 1
+    balance_list = [num1, num2, num3]
+    balance_list_type7 = [num11, num22]
+    # 找出候选购买材料目的地和候选销售产品目的地
+    for work_bench in work_bench_list:
+        # 工作台id
+        if work_bench['product_state'] == 1:
+            candidate_buy_destinations.append(
+                {'work_bench_id': work_bench['id'], 'product_type': work_bench['type'], 'produce_remain_time': 0})
+        # 由于不考虑剩余生产时间分数更高，所以只在第一帧时考虑剩余时间，以免前50帧机器人静止不动
+        elif work_bench['produce_remain_time'] > 0 and frame_id == 1:
+            candidate_buy_destinations.append({'work_bench_id': work_bench['id'], 'product_type': work_bench['type'],
+                                               'produce_remain_time': work_bench['produce_remain_time']})
+
+        # 00000010=>2 对应材料1
+        # 00000100=>4 对应材料2
+        # 00001000=>8 对应材料3
+        # 00010000=>16 对应材料4
+        # 00100000=>32 对应材料5
+        # 01000000=>64 对应材料6
+        # 10000000=>128 对应材料7
+
+        # 类型4工作台，收购1和2
+        if work_bench['type'] == 4:
+            # 如果材料1空缺
+            if not work_bench['material_state'] & 2:
+                candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 1})
+            # 如果材料2空缺
+            if not work_bench['material_state'] & 4:
+                candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 2})
+        # 类型5工作台，收购1和3
+        if work_bench['type'] == 5:
+            # 如果材料1空缺
+            if not work_bench['material_state'] & 2:
+                candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 1})
+            # 如果材料3空缺
+            if not work_bench['material_state'] & 8:
+                candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 3})
+        # 类型6工作台，收购2和3
+        if work_bench['type'] == 6:
+            # 如果材料2空缺
+            if not work_bench['material_state'] & 4:
+                candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 2})
+            # 如果材料3空缺
+            if not work_bench['material_state'] & 8:
+                candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 3})
+        # 类型7工作台，收购4，5，6
+        if work_bench['type'] == 7:
+            # 如果材料4空缺
+            if not work_bench['material_state'] & 16:
+                candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 4})
+            # 如果材料5空缺
+            if not work_bench['material_state'] & 32:
+                candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 5})
+            # 如果材料6空缺
+            if not work_bench['material_state'] & 64:
+                candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 6})
+        # 类型8工作台，收购7
+        if work_bench['type'] == 8:
+            candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 7})
+        # 类型9工作台，收购1-7
+        if work_bench['type'] == 9:
+            for i in range(7):
+                candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': i + 1})
+
+    # 构造所有的送货策略组合，格式为字典{取货点工作台id（departure_work_bench_id），送货点工作台id(destination_work_bench_id)，
+    # 配送货物类型编号(product_type,1-7)，收益(profit),距离（distance）
+    # 潜在收益（potential_profit,送货点工作台的产物可能产生的收益的一部分作为潜在收益，4，5，6号工作台产物收益的一半作为潜在收益，7号工作台产物收益的1/3作为潜在收益）}
+    # 获得潜在收益需要多跑的距离（distance_for_potential_profit）
+    distribution_strategies = []
+    for departure in candidate_buy_destinations:
+        for destination in candidate_sell_destinations:
+            if departure['product_type'] == destination['material_requested']:
+                # 起点坐标
+                departure_xy = np.array([work_bench_list[departure['work_bench_id']]['x'],
+                                         work_bench_list[departure['work_bench_id']]['y']])
+                destination_xy = np.array([work_bench_list[destination['work_bench_id']]['x'],
+                                           work_bench_list[destination['work_bench_id']]['y']])
+                distance = np.linalg.norm(departure_xy - destination_xy)
+                profit = product_profits[departure['product_type'] - 1]
+                potential_profit = 0
+                distance_for_potential_profit = 0
+                # # 只有目标送货工作台产品格没有物品且不在生产中才能获得潜在收益
+                if work_bench_list[destination['work_bench_id']]['type'] == 4 and \
+                        nearest_sell_place[destination['work_bench_id']]['id'] != -1 and \
+                        work_bench_list[destination['work_bench_id']]['produce_remain_time'] != -1:
+                    potential_profit = product_profits[
+                                           work_bench_list[destination['work_bench_id']]['type'] - 1] / 2 * 1.1
+                    distance_for_potential_profit = nearest_sell_place[destination['work_bench_id']]['distance']
+
+                if work_bench_list[destination['work_bench_id']]['type'] == 5 and \
+                        nearest_sell_place[destination['work_bench_id']]['id'] != -1 and \
+                        work_bench_list[destination['work_bench_id']]['produce_remain_time'] != -1:
+                    potential_profit = product_profits[
+                                           work_bench_list[destination['work_bench_id']]['type'] - 1] / 2
+                    distance_for_potential_profit = nearest_sell_place[destination['work_bench_id']]['distance']
+
+                if work_bench_list[destination['work_bench_id']]['type'] == 6 and \
+                        nearest_sell_place[destination['work_bench_id']]['id'] != -1 and \
+                        work_bench_list[destination['work_bench_id']]['produce_remain_time'] != -1:
+                    potential_profit = product_profits[
+                                           work_bench_list[destination['work_bench_id']]['type'] - 1] / 2
+                    distance_for_potential_profit = nearest_sell_place[destination['work_bench_id']]['distance']
+
+                if work_bench_list[destination['work_bench_id']]['type'] == 7 and \
+                        nearest_sell_place[destination['work_bench_id']]['id'] != -1 and \
+                        work_bench_list[destination['work_bench_id']]['produce_remain_time'] != -1:
+                    potential_profit = product_profits[
+                                           work_bench_list[destination['work_bench_id']]['type'] - 1] / 3
+                    distance_for_potential_profit = nearest_sell_place[destination['work_bench_id']]['distance']
+                if work_bench_list[destination['work_bench_id']]['type'] == 8:
+                    potential_profit = 0.5 * profit
+                distribution_strategies.append(
+                    {'departure_work_bench_id': departure['work_bench_id'],
+                     'destination_work_bench_id': destination['work_bench_id'],
+                     'product_type': departure['product_type'],
+                     'profit': product_profits[departure['product_type'] - 1],
+                     'potential_profit': potential_profit,
+                     'distance': distance,
+                     'distance_for_potential_profit': distance_for_potential_profit})
+
+    # 若机器人R当前任务是去A工作台取货，且有另一个机器人去A工作台送货，则机器人R应该立即放弃当前任务
+    for robot in robot_list:
+        if strategies_of_robots[robot['id']] == {}:
+            continue
+        for other_robot in robot_list:
+            if robot['id'] == other_robot['id'] or strategies_of_robots[other_robot['id']] == {}:
+                continue
+            else:
+                # print(str(strategies_of_robots[robot['id']]) + "--------------------------------", file=sys.stderr)
+                if strategies_of_robots[other_robot['id']]['carried_product_type'] != 0 and \
+                        strategies_of_robots[other_robot['id']]['destination_work_bench_id'] == \
+                        strategies_of_robots[robot['id']]['departure_work_bench_id'] and \
+                        strategies_of_robots[robot['id']]['carried_product_type'] == 0:
+                    strategies_of_robots[robot['id']] = {}
+                    break
+
+    # 为每个机器人找出前N个平均每米收益最大的方案
+    top_n_strategies_for_robots = []
+    for robot in robot_list:
+        # top_n_strategies_for_this_robot内容格式为{取货点工作台序号(departure_work_bench_id)，送货点工作台序号(destination_work_bench_id)，
+        # 配送货物类型编号(product_type)，平均每米收益(profit_per_meter)}
+        top_n_strategies_for_this_robot = []
+        if strategies_of_robots[robot['id']] != {}:
+            top_n_strategies_for_robots.append(top_n_strategies_for_this_robot)
+            continue
+        robot_xy = np.array([robot['x'], robot['y']])
+        for strategy in distribution_strategies:
+            reword = reword_strategy_map4(balance_list, work_bench_list, strategy, frame_id)
+            departure_xy = np.array([work_bench_list[strategy['departure_work_bench_id']]['x'],
+                                     work_bench_list[strategy['departure_work_bench_id']]['y']])
+            distance_from_robot_to_departure = np.linalg.norm(robot_xy - departure_xy)
+            distance_from_departure_to_destination = strategy['distance']
+            # 如果当前任务在游戏结束前无法完成（机器人理论需要跑动的距离*延误系数>剩余时间以最快速度最多能跑的距离），则直接pass，
+            if (distance_from_robot_to_departure + distance_from_departure_to_destination) * 1.5 > (
+                    9000 - frame_id) * 0.12:
+                continue
+            profit_per_meter = (strategy['profit'] + strategy['potential_profit']) / (
+                    distance_from_robot_to_departure + distance_from_departure_to_destination + strategy[
+                'distance_for_potential_profit'])+reword
 
             # 插入排序，寻找插入点
             insert_index = len(top_n_strategies_for_this_robot)

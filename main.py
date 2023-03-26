@@ -10,6 +10,7 @@ from avoidCrash import countPreVec, avoid_wall
 
 from strategies import strategy_greedy_for_map_1, strategy_greedy_for_map_2, strategy_greedy_for_map_3, \
     strategy_greedy_for_map_4
+from strategies import strategy_greedy_for_map_4_v2
 
 
 def read_util_ok():
@@ -224,6 +225,7 @@ if __name__ == '__main__':
 
         slow_down_distance = 2.0  # 距离终点多远减速
         crash_detect_distance = 10.0  # 碰撞检测阈值
+        ignore_lowspeed = 3  # 忽略低速碰撞的阈值，低于该速度不检测碰撞
         # 如果是图1
         if num_of_work_bench == 43:
             map = 1
@@ -236,7 +238,7 @@ if __name__ == '__main__':
             # 在碰撞检测中忽略的低速碰撞
             ignore_lowspeed = 3
 
-            #[2.4,5,3]-本地604线上636
+            # [2.4,5,3]-本地604线上636
         # 如果是图2
         if num_of_work_bench == 25:
             map = 2
@@ -260,10 +262,13 @@ if __name__ == '__main__':
         # 如果是图4
         if num_of_work_bench == 18:
             map = 4
-            stimulate_factor_for_product_4 = 1.4  # 这个数字需要大于1，越大越积极生产物品4
-            strategies_of_robots = strategy_greedy_for_map_4(work_bench_list, robot_list, strategies_of_robots,
-                                                             frame_id,
-                                                             nearest_sell_place, stimulate_factor_for_product_4)
+            stimulate_factor_for_product_4 = 1.1  # 这个数字需要大于1，越大越积极生产物品4
+            # strategies_of_robots = strategy_greedy_for_map_4(work_bench_list, robot_list, strategies_of_robots,
+            #                                                  frame_id,
+            #                                                  nearest_sell_place, stimulate_factor_for_product_4)
+            strategies_of_robots = strategy_greedy_for_map_4_v2(work_bench_list, robot_list, strategies_of_robots,
+                                                                frame_id,
+                                                                nearest_sell_place)
             # slow_down_distance = 1.87,crash_detect_distance = 10, rank =6  对4的激励是1.1,60.5w
             slow_down_distance = 1.87
             crash_detect_distance = 10
