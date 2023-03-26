@@ -183,10 +183,6 @@ def avoid_crash_v2(robot_list, crash_list, frame_id):
         # 1为执行避让的机器人，2为不避让的机器人
         robot_1 = robot_list[crash[avoid_index]]
         robot_2 = robot_list[crash[(avoid_index + 1) % 2]]
-        # if 1215 <= frame_id <= 1220:
-        #     print(crash[avoid_index], file=sys.stderr)
-        #     print(robot_1, file=sys.stderr)
-        #     print(robot_2, file=sys.stderr)
 
         # 机器人朝向向量
         robot1_face_vec = np.array([np.cos(robot_1['face_angle']), np.sin(robot_1['face_angle'])])
@@ -223,6 +219,12 @@ def avoid_crash_v2(robot_list, crash_list, frame_id):
                     robot_1['rotate_state'] = 4.0
                 else:
                     robot_1['rotate_state'] = -4.0
+
+        if 2435 <= frame_id <= 2445:
+            print("避让id:" + str(crash[avoid_index]), file=sys.stderr)
+            print("碰撞机器人：", file=sys.stderr)
+            print(robot_1, file=sys.stderr)
+            print(robot_2, file=sys.stderr)
 
         # # 两个都不带货物或两个都带货物，距离目的地远的那个避让
         # else:

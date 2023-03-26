@@ -273,9 +273,9 @@ if __name__ == '__main__':
         if crash_list:
             avoid_crash_v2(robot_list, crash_list, frame_id)
 
-        # if 1215 <= frame_id <= 1220:
-        #     print(frame_id, file=sys.stderr)
-        #     print(crash_list, file=sys.stderr)
+        if 2435 <= frame_id <= 2445:
+            print("frame_id:" + str(frame_id), file=sys.stderr)
+            print("crash list" + str(crash_list), file=sys.stderr)
         #     print(robot_list, file=sys.stderr)
 
         for robot_id in range(4):
