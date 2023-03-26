@@ -220,27 +220,40 @@ if __name__ == '__main__':
 
         sys.stdout.write('%d\n' % frame_id)
 
-        slow_down_distance = 2.0
+        slow_down_distance = 2.0  # 距离终点多远减速
+        crash_detect_distance = 10.0  # 碰撞检测阈值
+        # 如果是图1
         if num_of_work_bench == 43:
             strategies_of_robots = strategy_greedy_for_map_1(work_bench_list, robot_list, strategies_of_robots,
                                                              frame_id, work_bench_statistics_by_type,
                                                              work_bench_list_by_type)
-            slow_down_distance = 2.4  # 2.4 63.5
+            # slow_down_distance = 2.4，crash_detect_distance = 5，63.6万
+            slow_down_distance = 2.4
+            crash_detect_distance = 5
+        # 如果是图2
         if num_of_work_bench == 25:
             strategies_of_robots = strategy_greedy_for_map_2(work_bench_list, robot_list, strategies_of_robots,
                                                              frame_id,
                                                              nearest_sell_place)
-            slow_down_distance = 1.7  # 1.7 rank=12 71.6w  对6的激励=2.3
+            # slow_down_distance = 1.7,crash_detect_distance=10,rank=12  对6的激励=2.3, 71.6w
+            slow_down_distance = 1.7
+            crash_detect_distance = 10
+        # 如果是图3
         if num_of_work_bench == 50:
             strategies_of_robots = strategy_greedy_for_map_3(work_bench_list, robot_list, strategies_of_robots,
                                                              frame_id,
                                                              nearest_sell_place)
-            slow_down_distance = 2.0  # 2.0,87.5w  这个参数图3跳帧能跑90万
+            # slow_down_distance = 2.0，crash_detect_distance = 4，90.6w
+            slow_down_distance = 2.0
+            crash_detect_distance = 4
+        # 如果是图4
         if num_of_work_bench == 18:
             strategies_of_robots = strategy_greedy_for_map_4(work_bench_list, robot_list, strategies_of_robots,
                                                              frame_id,
                                                              nearest_sell_place)
-            slow_down_distance = 1.87  # 1.87,60.5w  rank =6  对4的激励是1.1
+            # slow_down_distance = 1.87,crash_detect_distance = 10, rank =6  对4的激励是1.1,60.5w
+            slow_down_distance = 1.87
+            crash_detect_distance = 10
 
         # 看看每个机器人能不能购买或售出物品
         for robot in robot_list:
@@ -299,7 +312,7 @@ if __name__ == '__main__':
                 robot['forward_state'] = line_speed
 
         # 碰撞检测
-        crash_list = crash_detect(robot_list, crash_detect_distance=10)
+        crash_list = crash_detect(robot_list, crash_detect_distance)
         if crash_list:
             avoid_crash_v2(robot_list, crash_list, frame_id)
 
