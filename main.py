@@ -244,13 +244,13 @@ if __name__ == '__main__':
             # if frame_id % 2500 == 0:
             #     time.sleep(1)
             map = 2
-            stimulate_factor_for_product_6 = 1.7 # [1.7] [1.7]
+            stimulate_factor_for_product_6 = 1.8 # [1.7] [1.7]
             strategies_of_robots = strategy_greedy_for_map_2(work_bench_list, robot_list, strategies_of_robots,
                                                              frame_id,
                                                              nearest_sell_place, stimulate_factor_for_product_6)
             # slow_down_distance = 1.7,crash_detect_distance=10,rank=12  对6的激励=2.3, 71.6w
             slow_down_distance = 1.9
-            crash_detect_distance = 8
+            crash_detect_distance = 7.5
             ignore_lowspeed = 3
             # [1.7,10,3] [1.9,8,3]
         # 如果是图3

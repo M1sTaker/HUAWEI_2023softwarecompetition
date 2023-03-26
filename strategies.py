@@ -717,7 +717,7 @@ def strategy_greedy_for_map_2(work_bench_list, robot_list, strategies_of_robots,
             if not work_bench['material_state'] & 4:
                 candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 2})
         # 类型5工作台，收购1和3
-        if work_bench['type'] == 5:
+        if work_bench['type'] == 5 and work_bench['y'] != 25.25:
             # 如果材料1空缺
             if not work_bench['material_state'] & 2:
                 candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 1})
@@ -725,7 +725,8 @@ def strategy_greedy_for_map_2(work_bench_list, robot_list, strategies_of_robots,
             if not work_bench['material_state'] & 8:
                 candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 3})
         # 类型6工作台，收购2和3
-        if work_bench['type'] == 6:
+        if work_bench['type'] == 6 and not (work_bench['x'] == 0.75 and work_bench['y'] == 0.75) and not (
+                work_bench['x'] == 49.25 and work_bench['y'] == 49.25):
             # 如果材料2空缺
             if not work_bench['material_state'] & 4:
                 candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 2})
@@ -1341,6 +1342,7 @@ def reword_strategy_map4(balance_list, work_bench_list, strategy, frame_id):
     reword_greedy = max(balance_list)
     return reword + reword_balance + reword_greedy + reword_type7
 
+
 def strategy_greedy_for_map_4_v2(work_bench_list, robot_list, strategies_of_robots, frame_id, nearest_sell_place):
     top_N = 30
 
@@ -1524,7 +1526,7 @@ def strategy_greedy_for_map_4_v2(work_bench_list, robot_list, strategies_of_robo
                 continue
             profit_per_meter = (strategy['profit'] + strategy['potential_profit']) / (
                     distance_from_robot_to_departure + distance_from_departure_to_destination + strategy[
-                'distance_for_potential_profit'])+reword
+                'distance_for_potential_profit']) + reword
 
             # 插入排序，寻找插入点
             insert_index = len(top_n_strategies_for_this_robot)
