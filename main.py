@@ -224,6 +224,7 @@ if __name__ == '__main__':
 
         slow_down_distance = 2.0  # 距离终点多远减速
         crash_detect_distance = 10.0  # 碰撞检测阈值
+        ignore_lowspeed = 3
         # 如果是图1
         if num_of_work_bench == 43:
             map = 1
@@ -240,12 +241,13 @@ if __name__ == '__main__':
         # 如果是图2
         if num_of_work_bench == 25:
             map = 2
+            stimulate_factor_for_product_6 =1.7
             strategies_of_robots = strategy_greedy_for_map_2(work_bench_list, robot_list, strategies_of_robots,
                                                              frame_id,
-                                                             nearest_sell_place)
+                                                             nearest_sell_place, stimulate_factor_for_product_6)
             # slow_down_distance = 1.7,crash_detect_distance=10,rank=12  对6的激励=2.3, 71.6w
-            slow_down_distance = 1.7
-            crash_detect_distance = 10
+            slow_down_distance = 1.9
+            crash_detect_distance = 8
             ignore_lowspeed = 3
         # 如果是图3
         if num_of_work_bench == 50:
