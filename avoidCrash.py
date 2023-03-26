@@ -155,7 +155,7 @@ def crash_detect(robot_list, crash_detect_distance=2):
 
 
 # 检测到碰撞后的转向
-def avoid_crash_v2(robot_list, crash_list, frame_id):
+def avoid_crash_v2(robot_list, crash_list, frame_id, map):
     # rotate_list = [0, 0, 0, 0]  # 机器人在防碰撞策略中的转向次数
     # slow_list = [0, 0, 0, 0]  # 机器人在防碰撞策略中的减速次数
 
@@ -200,6 +200,8 @@ def avoid_crash_v2(robot_list, crash_list, frame_id):
             if robot_2['rotate_state'] != 0:
                 # 避让机器人的转向方向与携带货物的机器人相反
                 new_rotate_state = 4.0 * abs(robot_2['rotate_state']) / robot_2['rotate_state']
+                if map == 3 or map == 4:
+                    new_rotate_state = 4.0 * abs(robot_2['angle_speed']) / robot_2['angle_speed']
             else:
                 new_rotate_state = 4.0
             # 如果避让机器人转向幅度太大
@@ -220,11 +222,11 @@ def avoid_crash_v2(robot_list, crash_list, frame_id):
                 else:
                     robot_1['rotate_state'] = -4.0
 
-        if 2435 <= frame_id <= 2445:
-            print("避让id:" + str(crash[avoid_index]), file=sys.stderr)
-            print("碰撞机器人：", file=sys.stderr)
-            print(robot_1, file=sys.stderr)
-            print(robot_2, file=sys.stderr)
+        # if 2435 <= frame_id <= 2445:
+        #     print("避让id:" + str(crash[avoid_index]), file=sys.stderr)
+        #     print("碰撞机器人：", file=sys.stderr)
+        #     print(robot_1, file=sys.stderr)
+        #     print(robot_2, file=sys.stderr)
 
         # # 两个都不带货物或两个都带货物，距离目的地远的那个避让
         # else:

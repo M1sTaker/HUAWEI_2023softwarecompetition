@@ -31,6 +31,8 @@ if __name__ == '__main__':
 
     strategies_of_robots = [{}, {}, {}, {}]
 
+    map = 0
+
     while True:
         line = sys.stdin.readline()
         if not line:
@@ -224,6 +226,7 @@ if __name__ == '__main__':
         crash_detect_distance = 10.0  # 碰撞检测阈值
         # 如果是图1
         if num_of_work_bench == 43:
+            map = 1
             strategies_of_robots = strategy_greedy_for_map_1(work_bench_list, robot_list, strategies_of_robots,
                                                              frame_id, work_bench_statistics_by_type,
                                                              work_bench_list_by_type)
@@ -232,6 +235,7 @@ if __name__ == '__main__':
             crash_detect_distance = 5
         # 如果是图2
         if num_of_work_bench == 25:
+            map = 2
             strategies_of_robots = strategy_greedy_for_map_2(work_bench_list, robot_list, strategies_of_robots,
                                                              frame_id,
                                                              nearest_sell_place)
@@ -240,6 +244,7 @@ if __name__ == '__main__':
             crash_detect_distance = 10
         # 如果是图3
         if num_of_work_bench == 50:
+            map = 3
             strategies_of_robots = strategy_greedy_for_map_3(work_bench_list, robot_list, strategies_of_robots,
                                                              frame_id,
                                                              nearest_sell_place)
@@ -248,6 +253,7 @@ if __name__ == '__main__':
             crash_detect_distance = 4
         # 如果是图4
         if num_of_work_bench == 18:
+            map = 4
             strategies_of_robots = strategy_greedy_for_map_4(work_bench_list, robot_list, strategies_of_robots,
                                                              frame_id,
                                                              nearest_sell_place)
@@ -314,11 +320,11 @@ if __name__ == '__main__':
         # 碰撞检测
         crash_list = crash_detect(robot_list, crash_detect_distance)
         if crash_list:
-            avoid_crash_v2(robot_list, crash_list, frame_id)
+            avoid_crash_v2(robot_list, crash_list, frame_id, map)
 
-        if 2435 <= frame_id <= 2445:
-            print("frame_id:" + str(frame_id), file=sys.stderr)
-            print("crash list" + str(crash_list), file=sys.stderr)
+        # if 2435 <= frame_id <= 2445:
+        #     print("frame_id:" + str(frame_id), file=sys.stderr)
+        #     print("crash list" + str(crash_list), file=sys.stderr)
         #     print(robot_list, file=sys.stderr)
 
         for robot_id in range(4):
