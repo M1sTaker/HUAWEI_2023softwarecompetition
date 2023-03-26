@@ -118,7 +118,7 @@ def avoid_crash(robot, other_robot_list, pre_speed, line_speed, angle_speed):
 
 
 # 检测碰撞函数，返回一个碰撞列表，表中元素表示会发生碰撞的机器人，如[[0, 1], [2, 3]]
-def crash_detect(robot_list, crash_detect_distance=2, ignore_lowspeed=3):
+def crash_detect(robot_list, map, crash_detect_distance=2, ignore_lowspeed=3 ):
     # 碰撞检测阈值，距离小于该值开始检测
 
     crash_list = []  # 碰撞列表
@@ -138,6 +138,7 @@ def crash_detect(robot_list, crash_detect_distance=2, ignore_lowspeed=3):
             #     if robot_12_dis > crash_detect_distance * 2: continue  # 距离过远不检测
             if robot_12_dis > crash_detect_distance: continue  # 距离过远不检测
             if robot_1['line_speed'] <= ignore_lowspeed and robot_2['line_speed'] <= ignore_lowspeed: continue  # 跳过低速碰撞
+            # if robot_1['carried_product_type'] == robot_2['carried_product_type'] == 0:continue
 
             # 机器人的速度v向量
             robot_1_v = np.array([robot_1['line_speed_x'], robot_1['line_speed_y']])
@@ -210,6 +211,8 @@ def avoid_crash_v2(robot_list, crash_list, frame_id, map):
             # 如果避让机器人转向幅度太大
             if abs(new_rotate_state - robot_1['rotate_state']) >= 4:
                 robot_1['forward_state'] = 2
+                if map == 2:
+                    robot_1['forward_state'] = 1.8
             robot_1['rotate_state'] = new_rotate_state
         else:  # 如果携带货物的机器人正在直行
             # 避让机器人在携带货物机器人的前进方向右侧时，左转(顺时针)

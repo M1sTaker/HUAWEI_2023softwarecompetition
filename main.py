@@ -241,14 +241,18 @@ if __name__ == '__main__':
             # [2.4,5,3]-本地604线上636
         # 如果是图2
         if num_of_work_bench == 25:
+            # if frame_id % 2500 == 0:
+            #     time.sleep(1)
             map = 2
+            stimulate_factor_for_product_6 = 1.7 # [1.7] [1.7]
             strategies_of_robots = strategy_greedy_for_map_2(work_bench_list, robot_list, strategies_of_robots,
                                                              frame_id,
-                                                             nearest_sell_place)
+                                                             nearest_sell_place, stimulate_factor_for_product_6)
             # slow_down_distance = 1.7,crash_detect_distance=10,rank=12  对6的激励=2.3, 71.6w
-            slow_down_distance = 1.7
-            crash_detect_distance = 10
+            slow_down_distance = 1.9
+            crash_detect_distance = 8
             ignore_lowspeed = 3
+            # [1.7,10,3] [1.9,8,3]
         # 如果是图3
         if num_of_work_bench == 50:
             map = 3
@@ -262,13 +266,13 @@ if __name__ == '__main__':
         # 如果是图4
         if num_of_work_bench == 18:
             map = 4
-            stimulate_factor_for_product_4 = 1.1  # 这个数字需要大于1，越大越积极生产物品4
-            # strategies_of_robots = strategy_greedy_for_map_4(work_bench_list, robot_list, strategies_of_robots,
-            #                                                  frame_id,
-            #                                                  nearest_sell_place, stimulate_factor_for_product_4)
-            strategies_of_robots = strategy_greedy_for_map_4_v2(work_bench_list, robot_list, strategies_of_robots,
-                                                                frame_id,
-                                                                nearest_sell_place)
+            stimulate_factor_for_product_4 = 1.7  # 这个数字需要大于1，越大越积极生产物品4
+            strategies_of_robots = strategy_greedy_for_map_4(work_bench_list, robot_list, strategies_of_robots,
+                                                             frame_id,
+                                                             nearest_sell_place, stimulate_factor_for_product_4)
+            # strategies_of_robots = strategy_greedy_for_map_4_v2(work_bench_list, robot_list, strategies_of_robots,
+            #                                                     frame_id,
+            #                                                     nearest_sell_place)
             # slow_down_distance = 1.87,crash_detect_distance = 10, rank =6  对4的激励是1.1,60.5w
             slow_down_distance = 1.87
             crash_detect_distance = 10
@@ -332,7 +336,7 @@ if __name__ == '__main__':
                 robot['forward_state'] = line_speed
 
         # 碰撞检测
-        crash_list = crash_detect(robot_list, crash_detect_distance, ignore_lowspeed)
+        crash_list = crash_detect(robot_list, map, crash_detect_distance, ignore_lowspeed)
         if crash_list:
             avoid_crash_v2(robot_list, crash_list, frame_id, map)
 
@@ -342,7 +346,7 @@ if __name__ == '__main__':
         #     print(robot_list, file=sys.stderr)
 
         for robot_id in range(4):
-            sys.stdout.write('forward %d %d\n' % (robot_id, robot_list[robot_id]['forward_state']))
+            sys.stdout.write('forward %d %f\n' % (robot_id, robot_list[robot_id]['forward_state']))
             sys.stdout.write('rotate %d %f\n' % (robot_id, robot_list[robot_id]['rotate_state']))
         finish()
 
