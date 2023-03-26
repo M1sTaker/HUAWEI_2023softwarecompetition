@@ -233,6 +233,10 @@ if __name__ == '__main__':
             # slow_down_distance = 2.4，crash_detect_distance = 5，63.6万
             slow_down_distance = 2.4
             crash_detect_distance = 5
+            # 在碰撞检测中忽略的低速碰撞
+            ignore_lowspeed = 3
+
+            #[2.4,5,3]-本地604线上636
         # 如果是图2
         if num_of_work_bench == 25:
             map = 2
@@ -242,6 +246,7 @@ if __name__ == '__main__':
             # slow_down_distance = 1.7,crash_detect_distance=10,rank=12  对6的激励=2.3, 71.6w
             slow_down_distance = 1.7
             crash_detect_distance = 10
+            ignore_lowspeed = 3
         # 如果是图3
         if num_of_work_bench == 50:
             map = 3
@@ -251,6 +256,7 @@ if __name__ == '__main__':
             # slow_down_distance = 2.0，crash_detect_distance = 4，90.6w
             slow_down_distance = 2.0
             crash_detect_distance = 4
+            ignore_lowspeed = 3
         # 如果是图4
         if num_of_work_bench == 18:
             map = 4
@@ -260,6 +266,8 @@ if __name__ == '__main__':
             # slow_down_distance = 1.87,crash_detect_distance = 10, rank =6  对4的激励是1.1,60.5w
             slow_down_distance = 1.87
             crash_detect_distance = 10
+            ignore_lowspeed = 3
+            # [1.87,10]-本地52w(线上最优) [2,11.1]-本地59w
 
         # 看看每个机器人能不能购买或售出物品
         for robot in robot_list:
@@ -302,7 +310,7 @@ if __name__ == '__main__':
                 line_speed, angle_speed = move_to_xy(robot, robot['destination'][0], robot['destination'][1],
                                                      robot_list, slow_down_distance)
                 pre_speed = countPreVec(robot, work_bench_list, strategy['departure_work_bench_id'])
-                line_speed, angle_speed = avoid_wall(robot, line_speed, angle_speed, pre_speed)
+                line_speed, angle_speed = avoid_wall(robot, line_speed, angle_speed, pre_speed, map)
                 robot['rotate_state'] = angle_speed
                 robot['forward_state'] = line_speed
 
@@ -313,12 +321,12 @@ if __name__ == '__main__':
                 line_speed, angle_speed = move_to_xy(robot, robot['destination'][0], robot['destination'][1],
                                                      robot_list, slow_down_distance)
                 pre_speed = countPreVec(robot, work_bench_list, strategy['destination_work_bench_id'])
-                line_speed, angle_speed = avoid_wall(robot, line_speed, angle_speed, pre_speed)
+                line_speed, angle_speed = avoid_wall(robot, line_speed, angle_speed, pre_speed, map)
                 robot['rotate_state'] = angle_speed
                 robot['forward_state'] = line_speed
 
         # 碰撞检测
-        crash_list = crash_detect(robot_list, crash_detect_distance)
+        crash_list = crash_detect(robot_list, crash_detect_distance, ignore_lowspeed)
         if crash_list:
             avoid_crash_v2(robot_list, crash_list, frame_id, map)
 
