@@ -255,6 +255,8 @@ if __name__ == '__main__':
             # [1.7,10,3] [1.9,8,3]
         # 如果是图3
         if num_of_work_bench == 50:
+            if frame_id == 1 or frame_id == 2 or frame_id == 6051:
+                time.sleep(0.015)
             map = 3
             strategies_of_robots = strategy_greedy_for_map_3(work_bench_list, robot_list, strategies_of_robots,
                                                              frame_id,
