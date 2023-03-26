@@ -276,8 +276,8 @@ if __name__ == '__main__':
             #                                                     frame_id,
             #                                                     nearest_sell_place)
             # slow_down_distance = 1.87,crash_detect_distance = 10, rank =6  对4的激励是1.1,60.5w
-            slow_down_distance = 1.87
-            crash_detect_distance = 10
+            slow_down_distance = 1.9
+            crash_detect_distance = 6.7
             ignore_lowspeed = 3
             # [1.87,10]-本地52w(线上最优) [2,11.1]-本地59w
 

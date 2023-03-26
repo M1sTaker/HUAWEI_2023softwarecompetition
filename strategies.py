@@ -1121,7 +1121,7 @@ def strategy_greedy_for_map_4(work_bench_list, robot_list, strategies_of_robots,
             if not work_bench['material_state'] & 4:
                 candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 2})
         # 类型5工作台，收购1和3
-        if work_bench['type'] == 5:
+        if work_bench['type'] == 5 and not(work_bench['x']==12.25 and work_bench['y']==26.25):
             # 如果材料1空缺
             if not work_bench['material_state'] & 2:
                 candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 1})
@@ -1129,7 +1129,7 @@ def strategy_greedy_for_map_4(work_bench_list, robot_list, strategies_of_robots,
             if not work_bench['material_state'] & 8:
                 candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 3})
         # 类型6工作台，收购2和3
-        if work_bench['type'] == 6:
+        if work_bench['type'] == 6 and not(work_bench['x']==34.75 and work_bench['y']==21.25):
             # 如果材料2空缺
             if not work_bench['material_state'] & 4:
                 candidate_sell_destinations.append({'work_bench_id': work_bench['id'], 'material_requested': 2})
